@@ -6,7 +6,7 @@ let todosLosDiscos = []; // Aquí guardamos la "copia" para el buscador
 // --- 2. CARGAR DATOS DESDE EL SERVIDOR ---
 async function cargarDiscos() {
     try {
-        const respuesta = await fetch('https://tienda-musica-backend.onrender.com/discos');
+        const respuesta = await fetch('https://api-tienda-vinilos.onrender.com/discos');
         if (!respuesta.ok) throw new Error("Fallo al conectar con el servidor");
         
         todosLosDiscos = await respuesta.json(); // Guardamos los datos
@@ -116,7 +116,7 @@ async function eliminarDisco(id, titulo) {
     if (!confirm(`¿Borrar "${titulo}"?`)) return;
     const nombre_usuario = localStorage.getItem('usuarioLogueado');
     try {
-        const res = await fetch(`https://tienda-musica-backend.onrender.com/discos/${id}`, {
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre_usuario })
@@ -144,7 +144,7 @@ if (formEditar) {
         };
 
         try {
-            const res = await fetch(`https://tienda-musica-backend.onrender.com/discos/${id}`, {
+            const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datosActualizados)
@@ -186,7 +186,7 @@ async function comprar(id, stockActual, precio) {
 
     try {
         // Llamamos a una ruta especial de compra (la crearemos en el siguiente paso)
-        const respuesta = await fetch(`https://tienda-musica-backend.onrender.com/discos/${id}/compra`, {
+        const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}/compra`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre_usuario: usuario })
@@ -230,7 +230,7 @@ document.getElementById('form-editar').addEventListener('submit', async (e) => {
     console.log("Enviando a actualizar:", discoEditado);
 
     try {
-        const respuesta = await fetch(`https://tienda-musica-backend.onrender.com/discos/${id}`, {
+        const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(discoEditado)
