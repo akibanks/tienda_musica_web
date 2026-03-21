@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro - ESCOM Vinyl Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="login-container">
+        <form id="registro-form" class="auth-form">
+            <h2>Crear Cuenta</h2>
+            <div class="input-group">
+                <label>Nombre de Usuario</label>
+                <input type="text" id="reg-username" required placeholder="Ej. jesus_arreguin">
+            </div>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres">
+            </div>
+            <button type="submit">Registrarme</button>
+            <p id="mensaje-registro" class="error" style="color: #1db954;"></p>
+            <div style="margin-top: 15px;">
+                <a href="login.html" style="color: white; font-size: 0.9rem;">¿Ya tienes cuenta? Inicia sesión</a>
+            </div>
+        </form>
+    </div>
+    <script src="registro.js"></script>
+</body>
+</html>

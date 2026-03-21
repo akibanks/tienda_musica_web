@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Agregar Discos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🛠️ Panel de Inventario</h1>
+            <a href="index.html" class="btn-secundario">Volver al Catálogo</a>
+        </div>
+    </header>
+
+    <div class="login-container">
+        <form id="form-disco" class="auth-form" style="width: 400px;">
+            <h2>Nuevo Disco</h2>
+            
+            <div class="input-group">
+                <label>Título del Álbum</label>
+                <input type="text" id="titulo" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Artista / Banda</label>
+                <input type="text" id="artista" required>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group">
+                    <label>Precio ($)</label>
+                    <input type="number" id="precio" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label>Stock Inicial</label>
+                    <input type="number" id="stock" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>URL de la Portada (Opcional)</label>
+                <input type="url" id="imagen_url" placeholder="https://...">
+            </div>
+
+            <button type="submit">Guardar en Base de Datos</button>
+            <p id="mensaje-admin" class="error"></p>
+        </form>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

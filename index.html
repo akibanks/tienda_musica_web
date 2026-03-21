@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESCOM Vinyl Store - Jesús</title>
+    <link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3002/3002626.png"></head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <h1>💿 Tienda de Vinilos de Jesús</h1>
+            </div>
+            <div id="auth-section">
+                <button class="btn-login" onclick="window.location.href='login.html'">Entrar</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="search-container">
+            <input type="text" id="input-busqueda" placeholder="🔍 Buscar por artista o álbum...">
+        </div>
+
+        <h2>Nuestro Catálogo</h2>
+        
+        <section id="contenedor-discos" class="grid-discos">
+            <p style="color: #888; text-align: center; width: 100%;">Cargando música...</p>
+        </section>
+    </main>
+
+    <div id="modal-edicion" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>🛠️ Editar Información del Disco</h3>
+            <form id="form-editar">
+                <input type="hidden" id="edit-id">
+
+                <div class="input-group">
+                    <label>Título del Álbum</label>
+                    <input type="text" id="edit-titulo" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Artista / Banda</label>
+                    <input type="text" id="edit-artista" required>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group">
+                        <label>Precio ($)</label>
+                        <input type="number" id="edit-precio" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Stock</label>
+                        <input type="number" id="edit-stock" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>URL de la Portada</label>
+                    <input type="url" id="edit-imagen">
+                </div>
+
+                <div class="modal-botones">
+                    <button type="submit" class="btn-save">Guardar Cambios</button>
+                    <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
