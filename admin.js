@@ -20,9 +20,9 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
         mensaje.innerText = "❌ Error: Debes estar logueado como admin.";
         return;
     }
-
+https://api-tienda-vinilos.onrender.com/
     try {
-        const respuesta = await fetch('https://tienda-musica-backend.onrender.com/discos', {
+        const respuesta = await fetch('https://api-tienda-vinilos.onrender.com//discos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(disco)
