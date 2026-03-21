@@ -6,7 +6,7 @@ document.getElementById('registro-form').addEventListener('submit', async (e) =>
     const mensaje = document.getElementById('mensaje-registro');
 
     try {
-        const respuesta = await fetch('https://tienda-musica-backend.onrender.com/registro', {
+        const respuesta = await fetch('https://api-tienda-vinilos.onrender.com/registro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre_usuario, password })
