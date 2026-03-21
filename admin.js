@@ -22,7 +22,7 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
     }
 https://api-tienda-vinilos.onrender.com/
     try {
-        const respuesta = await fetch('https://api-tienda-vinilos.onrender.com//discos', {
+        const respuesta = await fetch('https://api-tienda-vinilos.onrender.com/discos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(disco)
