@@ -1,6 +1,6 @@
 # 💿 VinylVibes | Tienda de Discos Online
 
-¡Bienvenido a **VinylVibes**! Esta es una plataforma web desarrollada para la gestión y venta de música en formato físico. El proyecto destaca por tener una base de datos robusta basada en un modelo **Entidad-Relación Extendido (EER)**, garantizando integridad y escalabilidad.
+¡Bienvenido a **VinylVibes**! Esta es una plataforma web desarrollada para la gestión y venta de música en formato físico. El proyecto destaca por tener una base de datos robusta.
 
 ---
 
@@ -22,11 +22,7 @@ La aplicación está alojada en **Render**.
 
 El corazón de VinylVibes es su arquitectura de datos. Aplicamos conceptos avanzados para resolver problemas reales de negocio:
 
-### 1. Entidades Débiles (`LINEA_VENTA`)
-A diferencia de un modelo básico, usamos una **entidad débil** para el detalle de la venta. 
-* **Beneficio**: Esto nos permite "congelar" el precio unitario del disco en el momento exacto de la compra. Si el precio del producto cambia en el futuro, el historial de ventas del cliente permanece intacto y correcto.
-
-### 2. Jerarquía de Usuarios (Herencia)
+### 1. Jerarquía de Usuarios (Herencia)
 Implementamos una especialización para los trabajadores de la tienda:
 * **Supertipo:** `EMPLEADO` (Datos generales y login).
 * **Subtipos:** `ADMIN` (Control de inventario y accesos) y `VENDEDOR` (Gestión de ventas y comisiones).
@@ -40,10 +36,7 @@ Definimos restricciones $(min, max)$ estrictas:
 
 ---
 
-## 🛠️ Instalación y Configuración
+## Autores
+-Chavez Gutierrez Geraldine
+-Rojas Arreguin Jesus
 
-Si quieres correr este proyecto localmente, sigue estos pasos:
-
-1. **Clona el repositorio:**
-   ```bash
-   git clone [https://github.com/tu-usuario/vinyl-vibes.git](https://github.com/tu-usuario/vinyl-vibes.git)
