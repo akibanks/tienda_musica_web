@@ -1,48 +1,49 @@
-💿 VinylVibes - E-commerce de Discos
-Bienvenido a VinylVibes, una plataforma web completa para la gestión y venta de música en formato físico. Este proyecto integra un diseño de base de datos avanzado con una arquitectura de despliegue moderna y escalable.
+# 💿 VinylVibes | Tienda de Discos Online
 
-🚀 Funcionalidades Principales
-Catálogo Dinámico: Visualización de productos con portadas, stock en tiempo real y detalles del artista.
+¡Bienvenido a **VinylVibes**! Esta es una plataforma web desarrollada para la gestión y venta de música en formato físico. El proyecto destaca por tener una base de datos robusta basada en un modelo **Entidad-Relación Extendido (EER)**, garantizando integridad y escalabilidad.
 
-Panel Administrativo: Acceso diferenciado para empleados (Administradores y Vendedores) mediante jerarquías de herencia.
+---
 
-Filtros Avanzados: Búsqueda de productos por artista y disponibilidad.
+## 🚀 Tecnologías Utilizadas
 
-🛠️ Stack Tecnológico
-Para este proyecto hemos seleccionado herramientas de vanguardia que garantizan estabilidad y facilidad de mantenimiento:
+Para este proyecto, elegimos un stack moderno que permite un despliegue rápido y un manejo de datos eficiente:
 
-🐘 Base de Datos: Neon (PostgreSQL)
-Elegimos Neon como nuestro motor de base de datos relacional por varias razones clave:
+### 🐘 Base de Datos: Neon (PostgreSQL)
+Utilizamos **Neon** como nuestro motor de base de datos relacional serverless.
+* **¿Por qué Neon?**: Nos permite manejar ramas (*branching*) de la base de datos, lo que facilita probar cambios en el esquema sin romper la base de datos de producción. Al ser "serverless", escala automáticamente según el tráfico de la web.
 
-Serverless Postgres: Se escala automáticamente según la demanda de la web.
+### ☁️ Hosting & Despliegue: Render
+La aplicación está alojada en **Render**.
+* **¿Por qué Render?**: Ofrece una integración perfecta con GitHub (CI/CD), lo que significa que cada vez que subimos código, la página se actualiza automáticamente. Además, gestiona de forma segura nuestras variables de entorno y certificados SSL.
 
-Branching: Nos permite crear "ramas" de la base de datos para probar cambios sin afectar los datos reales de los clientes.
+---
 
-Velocidad: Al ser nativo de la nube, la latencia es mínima para usuarios en cualquier parte del mundo.
+## 📊 Diseño de la Base de Datos (Modelo EER)
 
-☁️ Hosting: Render
-La plataforma se encuentra desplegada en Render debido a su eficiencia en el flujo de trabajo:
+El corazón de VinylVibes es su arquitectura de datos. Aplicamos conceptos avanzados para resolver problemas reales de negocio:
 
-CI/CD Automático: Cada vez que subimos cambios a GitHub, la página se actualiza sola.
+### 1. Entidades Débiles (`LINEA_VENTA`)
+A diferencia de un modelo básico, usamos una **entidad débil** para el detalle de la venta. 
+* **Beneficio**: Esto nos permite "congelar" el precio unitario del disco en el momento exacto de la compra. Si el precio del producto cambia en el futuro, el historial de ventas del cliente permanece intacto y correcto.
 
-Gestión de Secretos: Permite manejar las credenciales de la base de datos de forma segura.
+### 2. Jerarquía de Usuarios (Herencia)
+Implementamos una especialización para los trabajadores de la tienda:
+* **Supertipo:** `EMPLEADO` (Datos generales y login).
+* **Subtipos:** `ADMIN` (Control de inventario y accesos) y `VENDEDOR` (Gestión de ventas y comisiones).
+* **Regla:** Es una jerarquía **total y disjunta**, lo que asegura que cada miembro del staff tenga un rol único y permisos específicos en la web.
 
-Certificación SSL: Proporciona HTTPS automático, vital para la confianza del cliente al realizar compras.
+### 3. Integridad mediante Cardinalidades
+Definimos restricciones $(min, max)$ estrictas:
+* **Clientes:** Pueden registrarse sin haber comprado aún $(0, n)$.
+* **Ventas:** No pueden existir ventas "vacías"; deben tener al menos un producto $(1, n)$.
+* **Artistas:** Un disco puede ser una colaboración de varios artistas $(1, n)$.
 
-📊 Arquitectura de Datos (Modelo EER)
-El corazón de esta aplicación es su modelo de base de datos Entidad-Relación Extendido (EER). A diferencia de un modelo básico, este diseño resuelve problemas complejos de negocio:
+---
 
-1. Entidades Débiles (LINEA_VENTA)
-Implementamos una entidad débil para el detalle de las ventas. Esto permite que, si el precio de un disco cambia en el catálogo general, la factura del cliente mantenga el precio histórico original.
+## 🛠️ Instalación y Configuración
 
-2. Jerarquía de Empleados
-Utilizamos el concepto de Especialización para separar los roles de ADMIN y VENDEDOR.
+Si quieres correr este proyecto localmente, sigue estos pasos:
 
-Ambos comparten datos básicos (ID, Nombre).
-
-Pero solo el ADMIN gestiona el inventario y solo el VENDEDOR acumula comisiones.
-
-###Autores:
-
-📄 Licencia
-Este proyecto es de uso académico para la materia de Bases de Datos 2026.
+1. **Clona el repositorio:**
+   ```bash
+   git clone [https://github.com/tu-usuario/vinyl-vibes.git](https://github.com/tu-usuario/vinyl-vibes.git)
