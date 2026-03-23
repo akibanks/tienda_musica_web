@@ -42,23 +42,5 @@ Ambos comparten datos básicos (ID, Nombre).
 
 Pero solo el ADMIN gestiona el inventario y solo el VENDEDOR acumula comisiones.
 
-💻 Instalación y Configuración
-Clonar el repositorio:
-
-Bash
-git clone https://github.com/tu-usuario/tienda-discos.git
-Configurar variables de entorno:
-Crea un archivo .env con tu cadena de conexión de Neon:
-
-Fragmento de código
-DATABASE_URL=postgres://usuario:password@endpoint.neon.tech/dbname
-Instalar dependencias:
-
-Bash
-npm install
-Ejecutar en local:
-
-Bash
-npm run dev
 📄 Licencia
 Este proyecto es de uso académico para la materia de Bases de Datos 2026.
