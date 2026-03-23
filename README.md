@@ -39,7 +39,8 @@ Definimos restricciones $(min, max)$ estrictas:
 ## Autores
 * Chavez Gutierrez Geraldine
 * Rojas Arreguin Jesus
-  
+---
+## Capturas de pantalla 
 <img width="1364" height="710" alt="image" src="https://github.com/user-attachments/assets/c81e5c9c-d576-4d95-9e0f-32eb8d1ac8cc" />
 <img width="448" height="482" alt="image" src="https://github.com/user-attachments/assets/58954105-8173-42a1-b48e-28a8f0527826" />
 <img width="1359" height="728" alt="image" src="https://github.com/user-attachments/assets/ac6890aa-ffbe-4727-b92d-76483fed8534" />
