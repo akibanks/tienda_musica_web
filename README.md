@@ -4,8 +4,6 @@ Bienvenido a VinylVibes, una plataforma web completa para la gestión y venta de
 🚀 Funcionalidades Principales
 Catálogo Dinámico: Visualización de productos con portadas, stock en tiempo real y detalles del artista.
 
-Gestión de Ventas: Sistema de carrito que "congela" el precio unitario al momento de la compra gracias a una entidad débil de detalles.
-
 Panel Administrativo: Acceso diferenciado para empleados (Administradores y Vendedores) mediante jerarquías de herencia.
 
 Filtros Avanzados: Búsqueda de productos por artista y disponibilidad.
