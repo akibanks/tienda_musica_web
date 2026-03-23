@@ -28,7 +28,7 @@ Implementamos una especialización para los trabajadores de la tienda:
 * **Subtipos:** `ADMIN` (Control de inventario y accesos) y `VENDEDOR` (Gestión de ventas y comisiones).
 * **Regla:** Es una jerarquía **total y disjunta**, lo que asegura que cada miembro del staff tenga un rol único y permisos específicos en la web.
 
-### 3. Integridad mediante Cardinalidades
+### 2. Integridad mediante Cardinalidades
 Definimos restricciones $(min, max)$ estrictas:
 * **Clientes:** Pueden registrarse sin haber comprado aún $(0, n)$.
 * **Ventas:** No pueden existir ventas "vacías"; deben tener al menos un producto $(1, n)$.
