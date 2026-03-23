@@ -39,4 +39,17 @@ Definimos restricciones $(min, max)$ estrictas:
 ## Autores
 * Chavez Gutierrez Geraldine
 * Rojas Arreguin Jesus
+  
+<img width="1364" height="710" alt="image" src="https://github.com/user-attachments/assets/c81e5c9c-d576-4d95-9e0f-32eb8d1ac8cc" />
+<img width="448" height="482" alt="image" src="https://github.com/user-attachments/assets/58954105-8173-42a1-b48e-28a8f0527826" />
+<img width="1359" height="728" alt="image" src="https://github.com/user-attachments/assets/ac6890aa-ffbe-4727-b92d-76483fed8534" />
+<img width="1365" height="774" alt="image" src="https://github.com/user-attachments/assets/26efe352-055b-4d3e-8cc6-77348c4cd4a4" />
+<img width="993" height="739" alt="image" src="https://github.com/user-attachments/assets/b4bea67f-9087-4c7e-817e-9eeb9e37f069" />
+<img width="1367" height="670" alt="image" src="https://github.com/user-attachments/assets/c1df7710-d4e5-40d6-ad54-2d92425d7ddc" />
+<img width="425" height="534" alt="image" src="https://github.com/user-attachments/assets/ad6f191d-c7e0-4c64-9dc6-306337b5067f" />
+
+
+
+
+
 
