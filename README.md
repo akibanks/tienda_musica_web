@@ -42,5 +42,7 @@ Ambos comparten datos básicos (ID, Nombre).
 
 Pero solo el ADMIN gestiona el inventario y solo el VENDEDOR acumula comisiones.
 
+###Autores:
+
 📄 Licencia
 Este proyecto es de uso académico para la materia de Bases de Datos 2026.
