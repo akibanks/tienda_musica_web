@@ -290,7 +290,7 @@ button, .btn-login {
   line-height: 1.7;
 }
 
-.hero-visual { position: relative; z-index: 1; }
+.hero-visual { position: relative; z-index: 1; padding: 20px;}
 
 /* Spinning vinyl in hero */
 .vinyl-spin {
