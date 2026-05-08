@@ -301,6 +301,11 @@ button, .btn-login {
   cursor: pointer;
   transform-origin: center center;
   will-change: transform;
+
+   border-radius: 50%;      /* Hace que el contenedor sea un círculo */
+  background: transparent; /* Asegura que no haya color de fondo */
+  border: none;            /* Elimina cualquier borde residual */
+  overflow: visible;
 }
 
 /* Frena suavemente al hacer hover — efecto "poner el dedo" */
