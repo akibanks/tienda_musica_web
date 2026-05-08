@@ -296,7 +296,7 @@ button, .btn-login {
 .vinyl-spin {
   width: clamp(160px, 18vw, 240px);
   height: clamp(160px, 18vw, 240px);
-  animation: vinyl-rotate 8s linear infinite;
+  animation: vinyl-rotate 2s linear infinite;
   filter: drop-shadow(0 12px 40px rgba(245,158,11,0.22));
   cursor: pointer;
   transform-origin: center center;
