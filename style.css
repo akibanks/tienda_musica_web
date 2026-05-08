@@ -1054,3 +1054,34 @@ header .header-content {
 
 /* Modal display toggle */
 .modal[style*="flex"] { display: flex !important; }
+
+/* ==========================================================================
+   ANIMACIÓN DEL VINILO (VinylVibes Premium)
+   ========================================================================== */
+
+/* 1. Definimos los fotogramas clave (Keyframes) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 2. Aplicamos la animación a la clase que definimos en el HTML */
+.vinyl-plate {
+  /* Establecemos el centro de rotación */
+  transform-origin: center; 
+  
+  /* Aplicamos la animación 'spin' */
+  animation-name: spin;
+  animation-duration: 2s; /* Tiempo que tarda una vuelta (2s = rápido pero premium) */
+  animation-iteration-count: infinite; /* Que gire para siempre */
+  animation-timing-function: linear; /* Velocidad constante */
+}
+
+/* 3. Ajuste opcional para la interactividad: El disco se para al pasar el ratón */
+.vinyl-plate:hover {
+  animation-play-state: paused;
+}
