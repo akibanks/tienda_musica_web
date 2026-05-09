@@ -2083,21 +2083,22 @@ header .header-content {
 .video-url-input-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
 
 .video-url-input-wrap input {
   flex: 1;
   min-width: 0;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 9px 12px;
+  border-radius: 50px;
   border: 1px solid var(--border-dim);
   background: var(--bg-surface);
   color: var(--text-primary);
   font-family: 'DM Mono', monospace;
   font-size: 0.68rem;
   outline: none;
+  height: 36px;
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 
@@ -2112,26 +2113,29 @@ header .header-content {
 }
 
 .video-url-btn {
-  width: 30px !important;
-  height: 30px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  background: var(--amber-glow) !important;
-  border: 1px solid var(--border-accent) !important;
-  color: var(--amber) !important;
-  display: flex !important;
+  padding: 0 14px !important;
+  height: 36px !important;
+  border-radius: 50px !important;
+  background: var(--grad-accent) !important;
+  border: none !important;
+  color: #fff !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 6px !important;
   flex-shrink: 0 !important;
   cursor: pointer !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
   transition: all var(--t-fast) !important;
-  box-shadow: none !important;
+  box-shadow: 0 2px 10px rgba(245,158,11,0.3) !important;
 }
 
 .video-url-btn:hover {
-  background: var(--amber) !important;
-  color: #000 !important;
-  transform: none !important;
+  filter: brightness(1.12) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.4) !important;
 }
 
 /* Botón "Quitar video" */
