@@ -6,6 +6,25 @@
 const contenedor   = document.getElementById('contenedor-discos');
 const authSection  = document.getElementById('auth-section');
 let todosLosDiscos = [];
+
+// Límite de discos visibles en el catálogo por defecto
+const LIMITE_CATALOGO = 50;
+
+// ── 1b. SINCRONIZACIÓN ENTRE PESTAÑAS ─────────────
+// Escucha cambios en localStorage desde otras pestañas/ventanas
+window.addEventListener('storage', (e) => {
+    if (e.key === 'vv_carrito') {
+        // Recargar el carrito desde el nuevo valor y re-renderizar
+        carrito = JSON.parse(e.newValue || '[]');
+        renderizarCarrito();
+    }
+    if (e.key === 'usuarioLogueado' || e.key === 'esAdmin') {
+        // Actualizar la UI de auth si cambió la sesión en otra pestaña
+        actualizarInterfazUsuario();
+        // Volver a renderizar cards por si cambió el rol admin
+        renderizarDiscos(todosLosDiscos.slice(0, LIMITE_CATALOGO), todosLosDiscos);
+    }
+});
  
 // Carrusel state
 let carruselOffset    = 0;
@@ -21,7 +40,8 @@ async function cargarDiscos() {
         const respuesta = await fetch('https://api-tienda-vinilos.onrender.com/discos');
         if (!respuesta.ok) throw new Error("Error al conectar con el servidor");
         todosLosDiscos = await respuesta.json();
-        renderizarDiscos(todosLosDiscos);
+        // Solo muestra los primeros LIMITE_CATALOGO discos; pasa el total para el contador
+        renderizarDiscos(todosLosDiscos.slice(0, LIMITE_CATALOGO), todosLosDiscos);
         renderizarCarrusel(todosLosDiscos);
     } catch (error) {
         console.error("Error al cargar discos:", error);
@@ -33,9 +53,12 @@ async function cargarDiscos() {
 }
  
 // ── 3. RENDERIZAR CARDS ───────────────────────────
-function renderizarDiscos(lista) {
+// lista    → discos a mostrar (puede ser un subconjunto de 50)
+// listaTodo → lista completa para el contador (opcional)
+function renderizarDiscos(lista, listaTodo) {
     const catalogCount = document.getElementById('catalog-count');
-    if (catalogCount) catalogCount.textContent = `${lista.length} discos`;
+    const total = listaTodo ? listaTodo.length : lista.length;
+    if (catalogCount) catalogCount.textContent = `${total} discos`;
  
     contenedor.innerHTML = '';
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
@@ -92,6 +115,28 @@ function renderizarDiscos(lista) {
  
         contenedor.appendChild(card);
     });
+
+    // Botón "Ver más" si hay discos ocultos (solo cuando no hay búsqueda activa)
+    if (listaTodo && lista.length < listaTodo.length) {
+        const verMasBtn = document.createElement('div');
+        verMasBtn.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;padding:20px 0;';
+        verMasBtn.innerHTML = `
+            <button
+                onclick="mostrarTodosLosDiscos()"
+                style="background:var(--bg-hover);border:1px solid var(--border-dim);color:var(--text-secondary);
+                       padding:10px 28px;border-radius:8px;cursor:pointer;font-size:0.9rem;transition:all .2s;"
+                onmouseover="this.style.color='var(--text-primary)'"
+                onmouseout="this.style.color='var(--text-secondary)'"
+            >
+                Ver todos (${listaTodo.length - lista.length} más) ↓
+            </button>`;
+        contenedor.appendChild(verMasBtn);
+    }
+}
+
+// Muestra el catálogo completo (llamado desde el botón "Ver más")
+function mostrarTodosLosDiscos() {
+    renderizarDiscos(todosLosDiscos, todosLosDiscos);
 }
  
 // ── 4. CARRUSEL ───────────────────────────────────
@@ -139,16 +184,24 @@ function moverCarrusel(dir) {
 }
  
 // ── 5. BUSCADOR ───────────────────────────────────
+// La búsqueda opera siempre sobre todosLosDiscos (sin límite de 50)
+// El límite de 50 solo aplica cuando no hay término de búsqueda activo
 const inputBusqueda = document.getElementById('input-busqueda');
 if (inputBusqueda) {
     inputBusqueda.addEventListener('input', (e) => {
-        const texto     = e.target.value.toLowerCase().trim();
-        const filtrados = texto
-            ? todosLosDiscos.filter(d =>
+        const texto = e.target.value.toLowerCase().trim();
+        if (texto) {
+            // Búsqueda: mostrar TODOS los resultados del total de discos
+            const filtrados = todosLosDiscos.filter(d =>
                 d.titulo.toLowerCase().includes(texto) ||
-                d.artista.toLowerCase().includes(texto))
-            : todosLosDiscos;
-        renderizarDiscos(filtrados);
+                d.artista.toLowerCase().includes(texto));
+            // Pasamos filtrados como lista Y como listaTodo para que el contador
+            // muestre cuántos resultados hay y no aparezca el botón "Ver más"
+            renderizarDiscos(filtrados, filtrados);
+        } else {
+            // Sin búsqueda: volver al límite de 50 con el botón "Ver más"
+            renderizarDiscos(todosLosDiscos.slice(0, LIMITE_CATALOGO), todosLosDiscos);
+        }
     });
 }
  
@@ -258,6 +311,24 @@ function renderizarCarrito() {
     }).join('');
 }
  
+// ── 7b. VALIDACIÓN DE STOCK EN TIEMPO REAL ────────
+// Consulta la API para obtener el stock actualizado de un disco
+// antes de añadirlo al carrito o comprarlo. Evita datos locales obsoletos.
+async function validarStockReal(id) {
+    try {
+        const res = await fetch('https://api-tienda-vinilos.onrender.com/discos');
+        if (!res.ok) throw new Error('No se pudo consultar la API');
+        const discos = await res.json();
+        const disco  = discos.find(d => d.id === id);
+        if (!disco) return { valido: false, stock: 0, error: 'Disco no encontrado en el catálogo' };
+        return { valido: Number(disco.stock) > 0, stock: Number(disco.stock), disco };
+    } catch (e) {
+        console.error('Error al validar stock:', e);
+        // Si la red falla, no bloqueamos pero lo informamos
+        return { valido: null, stock: null, error: 'No se pudo verificar el stock. Revisa tu conexión.' };
+    }
+}
+
 function agregarAlCarrito(disco) {
     const existente = carrito.find(i => i.id === disco.id);
     if (existente) {
@@ -271,9 +342,31 @@ function agregarAlCarrito(disco) {
     abrirCarrito();
 }
  
-function agregarAlCarritoDesdeModal() {
+async function agregarAlCarritoDesdeModal() {
     if (!discoActivo) return;
-    agregarAlCarrito(discoActivo);
+
+    // Validar stock real en la API antes de añadir
+    const { valido, stock, disco: discoActualizado, error } = await validarStockReal(discoActivo.id);
+
+    if (valido === null) {
+        // Error de red: advertir pero permitir continuar
+        const continuar = confirm(`⚠️ ${error}\n¿Deseas añadirlo al carrito de todas formas?`);
+        if (!continuar) return;
+    } else if (!valido) {
+        alert(`❌ Lo sentimos, "${discoActivo.titulo}" ya no tiene stock disponible.`);
+        // Actualizar datos locales y re-renderizar
+        if (discoActualizado) {
+            const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
+            if (idx !== -1) todosLosDiscos[idx] = discoActualizado;
+        }
+        cargarDiscos();
+        cerrarModalDetalle();
+        return;
+    }
+
+    // Stock confirmado: sincronizar datos del disco con los de la API
+    const discoParaCarrito = discoActualizado || discoActivo;
+    agregarAlCarrito(discoParaCarrito);
     cerrarModalDetalle();
 }
  
@@ -333,11 +426,29 @@ async function comprar(id, stockActual, precio) {
         window.location.href = 'login.html';
         return;
     }
-    if (Number(stockActual) <= 0) {
-        alert("¡Lo sentimos! Este vinilo ya no tiene stock.");
+
+    // Validar stock real en la API (evita datos locales obsoletos)
+    const { valido, stock, disco: discoActualizado, error } = await validarStockReal(id);
+
+    if (valido === null) {
+        // Error de red: advertir y usar stock local como respaldo
+        const continuar = confirm(`⚠️ ${error}\n¿Deseas continuar con la compra de todas formas?`);
+        if (!continuar) return;
+    } else if (!valido) {
+        alert("❌ ¡Lo sentimos! Este vinilo ya no tiene stock disponible.");
+        if (discoActualizado) {
+            const idx = todosLosDiscos.findIndex(d => d.id === id);
+            if (idx !== -1) todosLosDiscos[idx] = discoActualizado;
+        }
+        cargarDiscos();
+        cerrarModalDetalle();
         return;
     }
-    if (!confirm(`¿Quieres comprar este disco por $${Number(precio).toFixed(2)}?`)) return;
+
+    // Usar precio actualizado de la API si está disponible
+    const precioFinal = discoActualizado ? discoActualizado.precio : precio;
+
+    if (!confirm(`¿Quieres comprar este disco por $${Number(precioFinal).toFixed(2)}?`)) return;
  
     try {
         const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}/compra`, {
