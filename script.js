@@ -355,34 +355,47 @@ function renderizarRecomendados(discoActualId) {
 }
 
 function _cargarVideo(discoId) {
+    const esAdmin = localStorage.getItem('esAdmin') === 'true';
     const videoId = albumVideos[discoId];
+
     if (videoId) {
-        _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`);
+        _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`, esAdmin);
     } else {
-        _mostrarPlaceholderVideo();
+        _mostrarPlaceholderVideo(esAdmin);
     }
 }
 
 // Muestra el iframe con una src dada
-function _mostrarIframeVideo(src) {
+function _mostrarIframeVideo(src, esAdmin) {
     document.getElementById('detalle-video-iframe').src  = src;
-    document.getElementById('detalle-video-wrapper').style.display = 'block';
+    document.getElementById('detalle-video-wrapper').style.display    = 'block';
     document.getElementById('detalle-video-placeholder').style.display = 'none';
-    document.getElementById('detalle-video-clear').style.display      = 'flex';
-    document.getElementById('detalle-video-label-txt').textContent    = 'Escucha el álbum';
+    // Solo el admin puede quitar el video
+    document.getElementById('detalle-video-clear').style.display = esAdmin ? 'flex' : 'none';
+    document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
 }
 
 // Muestra el estado vacío con el input de URL
-function _mostrarPlaceholderVideo() {
+function _mostrarPlaceholderVideo(esAdmin) {
+    // Si no se pasa el parámetro (ej. al cerrar el modal) lo leemos nosotros
+    if (esAdmin === undefined) esAdmin = localStorage.getItem('esAdmin') === 'true';
+
     const iframe = document.getElementById('detalle-video-iframe');
     if (iframe) iframe.src = '';
-    document.getElementById('detalle-video-wrapper').style.display    = 'none';
-    document.getElementById('detalle-video-placeholder').style.display = 'flex';
-    document.getElementById('detalle-video-clear').style.display      = 'none';
-    document.getElementById('detalle-video-label-txt').textContent    = 'Escucha el álbum';
-    // Limpiar input
-    const urlInput = document.getElementById('detalle-video-url');
-    if (urlInput) urlInput.value = '';
+    document.getElementById('detalle-video-wrapper').style.display = 'none';
+    document.getElementById('detalle-video-clear').style.display   = 'none';
+    document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
+
+    const placeholder = document.getElementById('detalle-video-placeholder');
+    if (esAdmin) {
+        // Admin: muestra el input para pegar URL
+        placeholder.style.display = 'flex';
+        const urlInput = document.getElementById('detalle-video-url');
+        if (urlInput) urlInput.value = '';
+    } else {
+        // Usuario normal: oculta toda la sección si no hay video
+        placeholder.style.display = 'none';
+    }
 }
 
 // Extrae el videoId de distintos formatos de URL de YouTube
