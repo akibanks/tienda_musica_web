@@ -38,7 +38,7 @@
 
       <nav class="header-nav" aria-label="Navegación principal">
         <a href="#" class="nav-link nav-link--active">Catálogo</a>
-        <a href="#" class="nav-link">Novedades</a>
+        <a href="#section-novedades" class="nav-link" onclick="scrollToNovedades(event)">Novedades</a>
         <a href="#" class="nav-link">Géneros</a>
       </nav>
 
@@ -132,6 +132,36 @@
     </section>
   </main>
 
+  <!-- ═══ SECCIÓN NOVEDADES & STORYTELLING ════════════════ -->
+  <section id="section-novedades" aria-label="Novedades y curiosidades">
+    <div class="novedades-header">
+      <div class="novedades-header__text">
+        <span class="novedades-eyebrow">Editorial</span>
+        <h2 class="novedades-titulo">Novedades <em>&amp; Historias</em></h2>
+        <p class="novedades-sub">Cada vinilo tiene una historia. Descúbrela.</p>
+      </div>
+      <div class="novedades-header__deco" aria-hidden="true">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="39" fill="none" stroke="url(#novGrad)" stroke-width="1.2"/>
+          <circle cx="40" cy="40" r="28" fill="none" stroke="url(#novGrad)" stroke-width="0.6" stroke-dasharray="4 3"/>
+          <circle cx="40" cy="40" r="14" fill="url(#novGrad)" opacity="0.18"/>
+          <circle cx="40" cy="40" r="5"  fill="url(#novGrad)"/>
+          <defs>
+            <linearGradient id="novGrad" x1="0" y1="0" x2="80" y2="80">
+              <stop offset="0%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ff6b6b"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Grid de discos — renderizado por JS con abrirModalStorytelling -->
+    <div id="novedades-grid" class="novedades-grid" aria-live="polite">
+      <!-- Cards insertadas por renderizarNovedades() -->
+    </div>
+  </section>
+
   <!-- ═══ FOOTER ════════════════════════════════════════ -->
   <footer class="site-footer">
     <div class="footer-inner">
@@ -197,20 +227,46 @@
   <div id="modal-detalle" role="dialog" aria-modal="true" aria-labelledby="detalle-titulo">
     <div class="modal-detalle__content">
 
+      <!-- COLUMNA IZQUIERDA: portada grande + video -->
       <div class="modal-detalle__cover">
         <img id="detalle-imagen" src="" alt="">
         <div class="modal-detalle__cover-overlay"></div>
         <button class="modal-detalle__close" onclick="cerrarModalDetalle()" aria-label="Cerrar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+
+        <!-- Contenedor del video de YouTube (visible solo si hay videoId) -->
+        <div class="modal-detalle__video" id="detalle-video-container" style="display:none;">
+          <div class="modal-detalle__video-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            Escucha el álbum
+          </div>
+          <div class="modal-detalle__video-wrapper">
+            <iframe
+              id="detalle-video-iframe"
+              src=""
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
       </div>
 
+      <!-- COLUMNA DERECHA: info + storytelling + acciones -->
       <div class="modal-detalle__body">
         <span class="modal-detalle__tag">Álbum de Vinilo · 12"</span>
         <h2 class="modal-detalle__titulo" id="detalle-titulo">—</h2>
         <p class="modal-detalle__artista" id="detalle-artista">—</p>
 
-        <div class="modal-detalle__meta">
+        <!-- Historia / descripción del disco (visible solo si hay texto) -->
+        <div class="modal-detalle__story" id="detalle-story-container" style="display:none;">
+          <blockquote id="detalle-story-texto"></blockquote>
+        </div>
+
+        <div class="modal-detalle__meta" id="detalle-meta-bloque">
           <div class="meta-item">
             <span class="meta-item__label">Precio</span>
             <span class="meta-item__value meta-item__value--price" id="detalle-precio">—</span>
@@ -229,7 +285,7 @@
           </div>
         </div>
 
-        <div class="modal-detalle__acciones">
+        <div class="modal-detalle__acciones" id="detalle-acciones-bloque">
           <button class="btn-carrito" id="detalle-btn-carrito" onclick="agregarAlCarritoDesdeModal()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             Al Carrito

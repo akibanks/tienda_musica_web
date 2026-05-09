@@ -972,6 +972,216 @@ button, .btn-login {
 }
 
 /* ── 15. FOOTER ──────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   SECCIÓN NOVEDADES & STORYTELLING
+   ══════════════════════════════════════════════════════════ */
+#section-novedades {
+  max-width: 1320px;
+  margin: 0 auto 0;
+  padding: 72px 32px 80px;
+}
+
+.novedades-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 52px;
+  gap: 24px;
+}
+
+.novedades-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: block;
+  margin-bottom: 10px;
+}
+
+.novedades-titulo {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.novedades-titulo em {
+  font-style: italic;
+  color: var(--amber);
+}
+
+.novedades-sub {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.novedades-header__deco {
+  flex-shrink: 0;
+  width: 72px;
+  opacity: 0.5;
+}
+
+.novedades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+/* Card de novedad — ligeramente diferente a la del catálogo */
+.novedad-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease),
+              border-color var(--t-fast),
+              box-shadow var(--t-fast);
+}
+
+.novedad-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-accent);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+}
+
+.novedad-card__img-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--bg-raised);
+}
+
+.novedad-card__img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s var(--ease);
+}
+
+.novedad-card:hover .novedad-card__img-wrap img {
+  transform: scale(1.04);
+}
+
+.novedad-card__story-hint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(9,9,11,0.85) 0%, transparent 55%);
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.novedad-card:hover .novedad-card__story-hint {
+  opacity: 1;
+}
+
+.novedad-card__story-hint span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.novedad-card__info {
+  padding: 14px 16px 16px;
+}
+
+.novedad-card__titulo {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.novedad-card__artista {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.novedad-card__has-story {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(245,158,11,0.18);
+  border: 1px solid rgba(245,158,11,0.35);
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Modo Storytelling del modal-detalle ──────── */
+/* Cuando el modal se abre en modo "story", añadimos esta clase al content */
+.modal-detalle__content--story .modal-detalle__story {
+  display: block !important;
+}
+
+.modal-detalle__content--story #detalle-meta-bloque,
+.modal-detalle__content--story #detalle-acciones-bloque {
+  display: none !important;
+}
+
+.modal-detalle__content--story .modal-detalle__tag {
+  color: var(--text-muted);
+}
+
+/* Estilos del bloque de historia dentro del modal */
+.modal-detalle__story {
+  background: transparent;
+  border: none;
+  border-left: 2px solid var(--amber);
+  padding: 4px 0 4px 18px;
+  margin-bottom: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-detalle__story blockquote {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  white-space: pre-line; /* respeta saltos de línea manuales */
+}
+
+.modal-detalle__story blockquote::before {
+  content: '"';
+  font-size: 3.5rem;
+  line-height: 0;
+  vertical-align: -0.6rem;
+  color: var(--amber);
+  opacity: 0.4;
+  margin-right: 4px;
+  font-family: 'Playfair Display', serif;
+}
+
+@media (max-width: 640px) {
+  #section-novedades { padding: 48px 20px 60px; }
+  .novedades-titulo { font-size: 1.8rem; }
+  .novedades-header__deco { display: none; }
+}
+
 .site-footer {
   border-top: 1px solid var(--border-subtle);
   margin-top: 40px;
@@ -1247,7 +1457,7 @@ header .header-content {
   border: 1px solid var(--border-dim);
   border-radius: var(--r-xl);
   width: 100%;
-  max-width: 780px;
+  max-width: 1100px;          /* ↑ antes 780px */
   box-shadow: var(--shadow-modal);
   display: flex;
   overflow: hidden;
@@ -1256,16 +1466,19 @@ header .header-content {
 }
 
 .modal-detalle__cover {
-  width: 300px;
+  width: 420px;               /* ↑ antes 300px */
   flex-shrink: 0;
   position: relative;
   background: var(--bg-raised);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-detalle__cover img {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   object-fit: cover;
   display: block;
 }
@@ -1274,6 +1487,62 @@ header .header-content {
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(255,107,107,0.06));
+  pointer-events: none;
+}
+
+/* ── Video de YouTube ── */
+.modal-detalle__video {
+  flex-shrink: 0;
+  padding: 12px 14px 14px;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.modal-detalle__video-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+
+.modal-detalle__video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;        /* aspect-ratio 16:9 */
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.modal-detalle__video-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ── Storytelling / descripción ── */
+.modal-detalle__story {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.modal-detalle__story p {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
 }
 
 .modal-detalle__body {
@@ -1395,9 +1664,11 @@ header .header-content {
   transform: translateY(-1px) !important;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .modal-detalle__content { flex-direction: column; max-height: 95vh; }
-  .modal-detalle__cover { width: 100%; height: 220px; }
+  .modal-detalle__cover { width: 100%; height: 260px; flex-direction: row; }
+  .modal-detalle__cover img { height: 100%; flex: 1; }
+  .modal-detalle__video { display: none !important; }   /* en móvil ocultamos el video para ahorrar espacio */
   .modal-detalle__body { padding: 24px 22px 22px; }
   .modal-detalle__titulo { font-size: 1.4rem; }
   .modal-detalle__meta { grid-template-columns: 1fr 1fr; }

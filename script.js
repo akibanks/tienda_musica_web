@@ -43,6 +43,7 @@ async function cargarDiscos() {
         // Solo muestra los primeros LIMITE_CATALOGO discos; pasa el total para el contador
         renderizarDiscos(todosLosDiscos.slice(0, LIMITE_CATALOGO), todosLosDiscos);
         renderizarCarrusel(todosLosDiscos);
+        renderizarNovedades(todosLosDiscos);
     } catch (error) {
         console.error("Error al cargar discos:", error);
         contenedor.innerHTML = `
@@ -206,37 +207,138 @@ if (inputBusqueda) {
 }
  
 // ── 6. MODAL DETALLE ──────────────────────────────
+// ┌─────────────────────────────────────────────────────────────────────┐
+// │ CONFIGURACIÓN DE VIDEOS POR ÁLBUM                                   │
+// │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
+// └─────────────────────────────────────────────────────────────────────┘
+const albumVideos = {
+    // Ejemplo: 1: "dQw4w9WgXcQ"
+};
+
+// ┌─────────────────────────────────────────────────────────────────────┐
+// │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
+// │                                                                     │
+// │ Escribe aquí la historia o curiosidades de cada disco.              │
+// │ La clave es el `id` del disco tal como llega de la API.            │
+// │                                                                     │
+// │   albumStories[<id>] = `Tu texto aquí.                             │
+// │   Puedes usar saltos de línea libremente.`;                         │
+// │                                                                     │
+// │ Los discos con historia aparecen destacados en la sección Novedades │
+// │ y al hacer clic abren el modal en modo Storytelling (sin precio).   │
+// └─────────────────────────────────────────────────────────────────────┘
+const albumStories = {
+
+    // ── EJEMPLO — reemplaza el 0 por el id real del disco ──────────────
+    0: `Grabado en tres noches de lluvia torrencial en los estudios Abbey Road,
+este álbum nació de un accidente: el ingeniero de sonido olvidó detener
+la cinta y capturó el momento exacto en que la banda encontró su sonido.
+
+Dicen que el vinilo original tiene un micro-surco oculto entre la pista 4
+y 5 donde puede escucharse, muy tenuemente, la risa del productor.`,
+
+    // ── Agrega más discos aquí ─────────────────────────────────────────
+    // 12: `Historia del disco con id 12...`,
+    // 37: `Historia del disco con id 37...`,
+
+};
+
+// Abre el modal en modo COMPRA normal (desde el catálogo)
 function abrirModalDetalle(disco) {
     discoActivo = disco;
- 
-    const modal  = document.getElementById('modal-detalle');
-    const stock  = Number(disco.stock);
-    const imgUrl = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
- 
-    document.getElementById('detalle-imagen').src  = imgUrl;
-    document.getElementById('detalle-imagen').alt  = disco.titulo;
-    document.getElementById('detalle-titulo').textContent   = disco.titulo;
-    document.getElementById('detalle-artista').textContent  = disco.artista;
-    document.getElementById('detalle-precio').textContent   = `$${Number(disco.precio).toFixed(2)}`;
-    document.getElementById('detalle-stock').textContent    = `${stock} unidades`;
-    document.getElementById('detalle-estado').textContent   =
-        stock === 0 ? 'Sin stock' : stock <= 3 ? 'Últimas unidades' : 'En stock';
-    document.getElementById('detalle-estado').style.color   =
-        stock === 0 ? '#fca5a5' : stock <= 3 ? '#fcd34d' : '#6ee7b7';
- 
-    // Disable buttons if out of stock
-    const btnCarrito  = document.getElementById('detalle-btn-carrito');
-    const btnComprar  = document.getElementById('detalle-btn-comprar');
-    btnCarrito.disabled = stock === 0;
-    btnComprar.disabled = stock === 0;
- 
+
+    const modal   = document.getElementById('modal-detalle');
+    const content = document.querySelector('.modal-detalle__content');
+    const stock   = Number(disco.stock);
+    const imgUrl  = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+
+    // Quitar modo storytelling si venía de novedades
+    content.classList.remove('modal-detalle__content--story');
+
+    _rellenarModalBase(disco, imgUrl, stock);
+
+    // Mostrar precio y acciones; ocultar historia
+    document.getElementById('detalle-meta-bloque').style.display    = '';
+    document.getElementById('detalle-acciones-bloque').style.display = '';
+    document.getElementById('detalle-story-container').style.display = 'none';
+
+    // Botones habilitados según stock
+    document.getElementById('detalle-btn-carrito').disabled = stock === 0;
+    document.getElementById('detalle-btn-comprar').disabled = stock === 0;
+
+    _cargarVideo(disco.id);
+
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+}
+
+// Abre el modal en modo STORYTELLING (desde la sección Novedades)
+function abrirModalStorytelling(disco) {
+    discoActivo = disco;
+
+    const modal   = document.getElementById('modal-detalle');
+    const content = document.querySelector('.modal-detalle__content');
+    const stock   = Number(disco.stock);
+    const imgUrl  = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+
+    // Activar modo storytelling
+    content.classList.add('modal-detalle__content--story');
+
+    _rellenarModalBase(disco, imgUrl, stock);
+
+    // Ocultar precio y botones de compra
+    document.getElementById('detalle-meta-bloque').style.display    = 'none';
+    document.getElementById('detalle-acciones-bloque').style.display = 'none';
+
+    // Mostrar historia
+    const storyContainer = document.getElementById('detalle-story-container');
+    const storyTexto     = document.getElementById('detalle-story-texto');
+    const story          = albumStories[disco.id];
+
+    storyTexto.textContent = story ||
+        `✍️ La historia de este álbum aún no ha sido escrita.\n\nAgrega su texto en el diccionario albumStories dentro de script.js usando la clave ${disco.id}.`;
+    storyContainer.style.display = 'block';
+
+    _cargarVideo(disco.id);
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+// ── Helpers internos del modal ─────────────────────
+function _rellenarModalBase(disco, imgUrl, stock) {
+    document.getElementById('detalle-imagen').src = imgUrl;
+    document.getElementById('detalle-imagen').alt = disco.titulo;
+    document.getElementById('detalle-titulo').textContent  = disco.titulo;
+    document.getElementById('detalle-artista').textContent = disco.artista;
+    document.getElementById('detalle-precio').textContent  = `$${Number(disco.precio).toFixed(2)}`;
+    document.getElementById('detalle-stock').textContent   = `${stock} unidades`;
+
+    const estadoEl = document.getElementById('detalle-estado');
+    estadoEl.textContent = stock === 0 ? 'Sin stock' : stock <= 3 ? 'Últimas unidades' : 'En stock';
+    estadoEl.style.color = stock === 0 ? '#fca5a5' : stock <= 3 ? '#fcd34d' : '#6ee7b7';
+}
+
+function _cargarVideo(discoId) {
+    const videoContainer = document.getElementById('detalle-video-container');
+    const videoIframe    = document.getElementById('detalle-video-iframe');
+    const videoId        = albumVideos[discoId];
+
+    if (videoId) {
+        videoIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+        videoContainer.style.display = 'block';
+    } else {
+        videoIframe.src = '';
+        videoContainer.style.display = 'none';
+    }
 }
  
 function cerrarModalDetalle() {
     document.getElementById('modal-detalle').classList.remove('open');
     document.body.style.overflow = '';
+    // Detener el video al cerrar el modal (vaciar src del iframe)
+    const iframe = document.getElementById('detalle-video-iframe');
+    if (iframe) iframe.src = '';
     discoActivo = null;
 }
  
@@ -583,6 +685,60 @@ async function eliminarDisco(id, titulo) {
     } catch (e) { console.error(e); alert("Error de conexión"); }
 }
  
+// ── 14b. NOVEDADES & STORYTELLING ─────────────────
+// Renderiza el grid de la sección #section-novedades.
+// Muestra todos los discos; los que tienen historia en albumStories
+// se destacan con un badge. Al hacer clic abren el modal en modo story.
+function renderizarNovedades(lista) {
+    const grid = document.getElementById('novedades-grid');
+    if (!grid) return;
+
+    if (!lista || lista.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px 0;">No hay discos disponibles.</p>';
+        return;
+    }
+
+    grid.innerHTML = lista.map(disco => {
+        const img      = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
+        const tieneStory = albumStories.hasOwnProperty(disco.id);
+        const badge    = tieneStory
+            ? `<span class="novedad-card__has-story">Historia</span>` : '';
+
+        // Serializar para el onclick
+        const discoJSON = JSON.stringify(disco).replace(/"/g, '&quot;');
+
+        return `
+        <article class="novedad-card"
+            role="button" tabindex="0"
+            aria-label="${disco.titulo} por ${disco.artista} — leer historia"
+            onclick="abrirModalStorytelling(${discoJSON})"
+            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling(${discoJSON})">
+            <div class="novedad-card__img-wrap">
+                <img src="${img}" alt="${disco.titulo}" loading="lazy">
+                <div class="novedad-card__story-hint">
+                    <span>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                        Leer historia
+                    </span>
+                </div>
+                ${badge}
+            </div>
+            <div class="novedad-card__info">
+                <div class="novedad-card__titulo">${disco.titulo}</div>
+                <div class="novedad-card__artista">${disco.artista}</div>
+            </div>
+        </article>`;
+    }).join('');
+}
+
+// Smooth-scroll a la sección novedades desde el menú
+function scrollToNovedades(e) {
+    e.preventDefault();
+    const section = document.getElementById('section-novedades');
+    if (!section) return;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ── 14. INIT ──────────────────────────────────────
 actualizarInterfazUsuario();
 cargarDiscos();
