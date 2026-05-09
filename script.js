@@ -1,20 +1,20 @@
 // ══════════════════════════════════════════════════
 //  VinylVibes — script.js
 // ══════════════════════════════════════════════════
-
+ 
 // ── 1. GLOBALS ────────────────────────────────────
 const contenedor   = document.getElementById('contenedor-discos');
 const authSection  = document.getElementById('auth-section');
 let todosLosDiscos = [];
-
+ 
 // Carrusel state
 let carruselOffset    = 0;
 const CARRUSEL_STEP   = 220; // px per click
 const CARRUSEL_MAX    = 8;   // max cards shown
-
+ 
 // Modal detalle — disco activo
 let discoActivo = null;
-
+ 
 // ── 2. CARGAR DISCOS ──────────────────────────────
 async function cargarDiscos() {
     try {
@@ -31,15 +31,15 @@ async function cargarDiscos() {
             </p>`;
     }
 }
-
+ 
 // ── 3. RENDERIZAR CARDS ───────────────────────────
 function renderizarDiscos(lista) {
     const catalogCount = document.getElementById('catalog-count');
     if (catalogCount) catalogCount.textContent = `${lista.length} discos`;
-
+ 
     contenedor.innerHTML = '';
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-
+ 
     if (lista.length === 0) {
         contenedor.innerHTML = `
             <p style="color:var(--text-muted); text-align:center; width:100%; padding:40px 0; grid-column:1/-1;">
@@ -47,14 +47,14 @@ function renderizarDiscos(lista) {
             </p>`;
         return;
     }
-
+ 
     lista.forEach(disco => {
         const stock        = Number(disco.stock);
         const badgeClass   = stock === 0 ? 'badge--out-stock' : stock <= 3 ? 'badge--low-stock' : 'badge--in-stock';
         const badgeText    = stock === 0 ? 'Sin stock' : stock <= 3 ? `${stock} uds` : 'Disponible';
         const imgUrl       = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=500';
         const discoJSON    = JSON.stringify(disco).replace(/"/g, '&quot;');
-
+ 
         let adminBtns = '';
         if (esAdmin) {
             adminBtns = `
@@ -65,7 +65,7 @@ function renderizarDiscos(lista) {
                         onclick="eliminarDisco(${disco.id}, '${disco.titulo.replace(/'/g,"\\'")}')">🗑️ Borrar</button>
                 </div>`;
         }
-
+ 
         const card = document.createElement('div');
         card.className = 'disco-card';
         card.setAttribute('role', 'button');
@@ -73,7 +73,7 @@ function renderizarDiscos(lista) {
         card.setAttribute('aria-label', `${disco.titulo} por ${disco.artista}`);
         card.onclick = () => abrirModalDetalle(disco);
         card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') abrirModalDetalle(disco); };
-
+ 
         card.innerHTML = `
             <div class="disco-card__cover">
                 <img src="${imgUrl}" alt="${disco.titulo} — ${disco.artista}" loading="lazy">
@@ -89,26 +89,26 @@ function renderizarDiscos(lista) {
             </div>
             ${adminBtns}
         `;
-
+ 
         contenedor.appendChild(card);
     });
 }
-
+ 
 // ── 4. CARRUSEL ───────────────────────────────────
 function renderizarCarrusel(lista) {
     const track = document.getElementById('carrusel-track');
     if (!track) return;
-
+ 
     // Most recent = highest id (sort desc, take first CARRUSEL_MAX)
     const recientes = [...lista]
         .sort((a, b) => b.id - a.id)
         .slice(0, CARRUSEL_MAX);
-
+ 
     if (recientes.length === 0) {
         track.innerHTML = '<p style="color:var(--text-muted);padding:20px;font-size:0.85rem;">Sin discos recientes.</p>';
         return;
     }
-
+ 
     track.innerHTML = recientes.map(disco => {
         const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         return `
@@ -121,23 +121,23 @@ function renderizarCarrusel(lista) {
                 </div>
             </div>`;
     }).join('');
-
+ 
     carruselOffset = 0;
 }
-
+ 
 function moverCarrusel(dir) {
     const track    = document.getElementById('carrusel-track');
     const viewport = track?.parentElement;
     if (!track || !viewport) return;
-
+ 
     const maxScroll = track.scrollWidth - viewport.clientWidth;
     carruselOffset  = Math.max(0, Math.min(carruselOffset + dir * CARRUSEL_STEP, maxScroll));
     track.style.transform = `translateX(-${carruselOffset}px)`;
-
+ 
     document.getElementById('carrusel-prev').style.opacity = carruselOffset <= 0 ? '0.35' : '1';
     document.getElementById('carrusel-next').style.opacity = carruselOffset >= maxScroll ? '0.35' : '1';
 }
-
+ 
 // ── 5. BUSCADOR ───────────────────────────────────
 const inputBusqueda = document.getElementById('input-busqueda');
 if (inputBusqueda) {
@@ -151,15 +151,15 @@ if (inputBusqueda) {
         renderizarDiscos(filtrados);
     });
 }
-
+ 
 // ── 6. MODAL DETALLE ──────────────────────────────
 function abrirModalDetalle(disco) {
     discoActivo = disco;
-
+ 
     const modal  = document.getElementById('modal-detalle');
     const stock  = Number(disco.stock);
     const imgUrl = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
-
+ 
     document.getElementById('detalle-imagen').src  = imgUrl;
     document.getElementById('detalle-imagen').alt  = disco.titulo;
     document.getElementById('detalle-titulo').textContent   = disco.titulo;
@@ -170,28 +170,28 @@ function abrirModalDetalle(disco) {
         stock === 0 ? 'Sin stock' : stock <= 3 ? 'Últimas unidades' : 'En stock';
     document.getElementById('detalle-estado').style.color   =
         stock === 0 ? '#fca5a5' : stock <= 3 ? '#fcd34d' : '#6ee7b7';
-
+ 
     // Disable buttons if out of stock
     const btnCarrito  = document.getElementById('detalle-btn-carrito');
     const btnComprar  = document.getElementById('detalle-btn-comprar');
     btnCarrito.disabled = stock === 0;
     btnComprar.disabled = stock === 0;
-
+ 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
+ 
 function cerrarModalDetalle() {
     document.getElementById('modal-detalle').classList.remove('open');
     document.body.style.overflow = '';
     discoActivo = null;
 }
-
+ 
 // Close detail modal on backdrop click
 document.getElementById('modal-detalle').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modal-detalle')) cerrarModalDetalle();
 });
-
+ 
 // Close on Escape
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -199,29 +199,29 @@ document.addEventListener('keydown', (e) => {
         cerrarModal();
     }
 });
-
+ 
 // ── 7. CART STATE ─────────────────────────────────
 let carrito = JSON.parse(localStorage.getItem('vv_carrito') || '[]');
-
+ 
 function guardarCarrito() {
     localStorage.setItem('vv_carrito', JSON.stringify(carrito));
 }
-
+ 
 function renderizarCarrito() {
     const itemsEl  = document.getElementById('carrito-items');
     const totalEl  = document.getElementById('carrito-total');
     const countEl  = document.getElementById('carrito-count');
-
+ 
     const totalUds = carrito.reduce((s, i) => s + i.cantidad, 0);
     const totalPrecio = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
-
+ 
     // Badge
     countEl.textContent  = totalUds;
     countEl.style.display = totalUds > 0 ? 'flex' : 'none';
-
+ 
     // Total
     totalEl.textContent = `$${totalPrecio.toFixed(2)}`;
-
+ 
     // Items
     if (carrito.length === 0) {
         itemsEl.innerHTML = `
@@ -235,7 +235,7 @@ function renderizarCarrito() {
             </div>`;
         return;
     }
-
+ 
     itemsEl.innerHTML = carrito.map(item => {
         const img = item.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=100';
         return `
@@ -257,7 +257,7 @@ function renderizarCarrito() {
             </div>`;
     }).join('');
 }
-
+ 
 function agregarAlCarrito(disco) {
     const existente = carrito.find(i => i.id === disco.id);
     if (existente) {
@@ -270,13 +270,13 @@ function agregarAlCarrito(disco) {
     // Open cart briefly to confirm
     abrirCarrito();
 }
-
+ 
 function agregarAlCarritoDesdeModal() {
     if (!discoActivo) return;
     agregarAlCarrito(discoActivo);
     cerrarModalDetalle();
 }
-
+ 
 function cambiarCantidad(id, delta) {
     const item = carrito.find(i => i.id === id);
     if (!item) return;
@@ -285,13 +285,13 @@ function cambiarCantidad(id, delta) {
     guardarCarrito();
     renderizarCarrito();
 }
-
+ 
 function eliminarDelCarrito(id) {
     carrito = carrito.filter(i => i.id !== id);
     guardarCarrito();
     renderizarCarrito();
 }
-
+ 
 function vaciarCarrito() {
     if (!carrito.length) return;
     if (!confirm('¿Vaciar el carrito?')) return;
@@ -299,7 +299,7 @@ function vaciarCarrito() {
     guardarCarrito();
     renderizarCarrito();
 }
-
+ 
 // ── 8. CART PANEL TOGGLE ──────────────────────────
 function toggleCarrito() {
     const panel   = document.getElementById('cart-panel');
@@ -313,19 +313,19 @@ function toggleCarrito() {
         abrirCarrito();
     }
 }
-
+ 
 function abrirCarrito() {
     document.getElementById('cart-panel').classList.add('open');
     document.getElementById('cart-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
+ 
 // ── 9. COMPRA ─────────────────────────────────────
 function comprarDesdeModal() {
     if (!discoActivo) return;
     comprar(discoActivo.id, discoActivo.stock, discoActivo.precio);
 }
-
+ 
 async function comprar(id, stockActual, precio) {
     const usuario = localStorage.getItem('usuarioLogueado');
     if (!usuario) {
@@ -338,7 +338,7 @@ async function comprar(id, stockActual, precio) {
         return;
     }
     if (!confirm(`¿Quieres comprar este disco por $${Number(precio).toFixed(2)}?`)) return;
-
+ 
     try {
         const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}/compra`, {
             method: 'POST',
@@ -358,12 +358,12 @@ async function comprar(id, stockActual, precio) {
         alert("Error de conexión con el servidor");
     }
 }
-
+ 
 // ── 10. INTERFAZ DE USUARIO ───────────────────────
 function actualizarInterfazUsuario() {
     const usuario = localStorage.getItem('usuarioLogueado');
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-
+ 
     // Rebuild auth section (but keep the cart button)
     const cartBtn = `
         <button class="cart-btn btn-sm" onclick="toggleCarrito()" aria-label="Abrir carrito">
@@ -371,7 +371,7 @@ function actualizarInterfazUsuario() {
             Carrito
             <span class="cart-badge" id="carrito-count" style="display:none;">0</span>
         </button>`;
-
+ 
     if (usuario) {
         const adminLink = esAdmin
             ? `<a href="admin.html" class="btn-ghost btn-sm">⚙️ Admin</a>` : '';
@@ -391,7 +391,7 @@ function actualizarInterfazUsuario() {
     // Re-render cart badge after rebuilding auth HTML
     renderizarCarrito();
 }
-
+ 
 function manejarAuth() {
     if (localStorage.getItem('usuarioLogueado')) {
         localStorage.removeItem('usuarioLogueado');
@@ -401,7 +401,7 @@ function manejarAuth() {
         window.location.href = 'login.html';
     }
 }
-
+ 
 // ── 11. MODAL EDICIÓN (Admin) ─────────────────────
 function abrirModalEditar(disco) {
     document.getElementById('edit-id').value      = disco.id;
@@ -413,12 +413,12 @@ function abrirModalEditar(disco) {
     document.getElementById('modal-edicion').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
-
+ 
 function cerrarModal() {
     document.getElementById('modal-edicion').style.display = 'none';
     document.body.style.overflow = '';
 }
-
+ 
 // ── 12. GUARDAR EDICIÓN (single listener) ─────────
 const formEditar = document.getElementById('form-editar');
 if (formEditar) {
@@ -426,7 +426,7 @@ if (formEditar) {
         e.preventDefault();
         const id             = document.getElementById('edit-id').value;
         const nombre_usuario = localStorage.getItem('usuarioLogueado');
-
+ 
         const datosActualizados = {
             titulo:       document.getElementById('edit-titulo').value,
             artista:      document.getElementById('edit-artista').value,
@@ -435,7 +435,7 @@ if (formEditar) {
             imagen_url:   document.getElementById('edit-imagen').value,
             nombre_usuario
         };
-
+ 
         try {
             const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
                 method: 'PUT',
@@ -456,7 +456,7 @@ if (formEditar) {
         }
     });
 }
-
+ 
 // ── 13. ELIMINAR DISCO ────────────────────────────
 async function eliminarDisco(id, titulo) {
     if (!confirm(`¿Borrar "${titulo}"?`)) return;
@@ -471,7 +471,7 @@ async function eliminarDisco(id, titulo) {
         else { const d = await res.json(); alert("Error: " + (d.error || "No se pudo eliminar")); }
     } catch (e) { console.error(e); alert("Error de conexión"); }
 }
-
+ 
 // ── 14. INIT ──────────────────────────────────────
 actualizarInterfazUsuario();
 cargarDiscos();
