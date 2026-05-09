@@ -803,13 +803,55 @@ async function procesarPago() {
         return;
     }
 
-    // Validar stock real
+    // Validar stock real (solo si es compra individual)
     const submitBtn = document.getElementById('pago-submit-btn');
     submitBtn.classList.add('loading');
     submitBtn.disabled = true;
     document.getElementById('pago-submit-txt').textContent = 'Procesando…';
 
-    const { valido, stock, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
+    // ── Checkout desde carrito ──────────────────────
+    if (_discoPagoActivo._esCarrito) {
+        const usuario = localStorage.getItem('usuarioLogueado');
+        try {
+            // Compramos cada item del carrito secuencialmente
+            let errores = [];
+            for (const item of carrito) {
+                for (let i = 0; i < item.cantidad; i++) {
+                    const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${item.id}/compra`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre_usuario: usuario })
+                    });
+                    if (!res.ok) {
+                        const d = await res.json();
+                        errores.push(`"${item.titulo}": ${d.error || 'sin stock'}`);
+                    }
+                }
+            }
+            if (errores.length === 0) {
+                mostrarToast(`✨ ¡Compra exitosa! ${carrito.length === 1 ? `"${carrito[0].titulo}" es tuyo.` : `${carrito.reduce((s,i)=>s+i.cantidad,0)} artículos comprados.`}`, 'success');
+                carrito = [];
+                guardarCarrito();
+                renderizarCarrito();
+                cerrarModalPago();
+                cargarDiscos();
+            } else {
+                mostrarToast('Algunos artículos fallaron: ' + errores.join(', '), 'error');
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                document.getElementById('pago-submit-txt').textContent = `Pagar $${Number(_discoPagoActivo.precio).toFixed(2)}`;
+            }
+        } catch (err) {
+            console.error('Error en checkout del carrito:', err);
+            mostrarToast('Error de conexión con el servidor.', 'error');
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+            document.getElementById('pago-submit-txt').textContent = `Pagar $${Number(_discoPagoActivo.precio).toFixed(2)}`;
+        }
+        return;
+    }
+
+    // ── Compra individual (desde el modal de detalle) ──
 
     if (valido === false) {
         mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
@@ -862,7 +904,51 @@ function abrirCheckoutDesdeCarrito() {
         mostrarToast('Tu carrito está vacío.', 'warning');
         return;
     }
-    mostrarToast('El checkout completo estará disponible próximamente.', 'info');
+
+    const usuario = localStorage.getItem('usuarioLogueado');
+    if (!usuario) {
+        mostrarToast('Debes iniciar sesión para comprar.', 'warning');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const totalPrecio = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
+    const totalUds    = carrito.reduce((s, i) => s + i.cantidad, 0);
+    const resumen     = totalUds === 1
+        ? carrito[0].titulo
+        : `${totalUds} artículos`;
+
+    // Reutilizamos el modal de pago pasando un objeto "disco" sintético con el total
+    _discoPagoActivo = {
+        id:     null,
+        titulo: resumen,
+        precio: totalPrecio,
+        _esCarrito: true,   // flag para procesarPago
+    };
+
+    document.getElementById('pago-subtitulo').textContent  = `${resumen} — $${totalPrecio.toFixed(2)}`;
+    document.getElementById('pago-submit-txt').textContent = `Pagar $${totalPrecio.toFixed(2)}`;
+
+    ['pago-nombre','pago-numero','pago-expiry','pago-cvv'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('preview-numero').textContent = '•••• •••• •••• ••••';
+    document.getElementById('preview-nombre').textContent  = 'TU NOMBRE';
+    document.getElementById('preview-expiry').textContent  = 'MM/YY';
+
+    const submitBtn = document.getElementById('pago-submit-btn');
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+
+    // Cerrar el panel del carrito antes de abrir el modal
+    const cartPanel = document.getElementById('cart-panel');
+    const cartOverlay = document.getElementById('cart-overlay');
+    if (cartPanel) cartPanel.classList.remove('open');
+    if (cartOverlay) cartOverlay.classList.remove('open');
+
+    document.getElementById('modal-pago').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('pago-nombre').focus(), 100);
 }
 
  
