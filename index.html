@@ -235,13 +235,37 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
 
-        <!-- Contenedor del video de YouTube (visible solo si hay videoId) -->
-        <div class="modal-detalle__video" id="detalle-video-container" style="display:none;">
+        <!-- Contenedor del video de YouTube — siempre visible -->
+        <div class="modal-detalle__video" id="detalle-video-container">
+
           <div class="modal-detalle__video-label">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-            Escucha el álbum
+            <span id="detalle-video-label-txt">Escucha el álbum</span>
           </div>
-          <div class="modal-detalle__video-wrapper">
+
+          <!-- Estado: sin video — input para pegar URL -->
+          <div class="video-placeholder" id="detalle-video-placeholder">
+            <div class="video-placeholder__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3 8 3"/><circle cx="12" cy="5" r="0"/><polygon points="10 12 16 14.5 10 17" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <p class="video-placeholder__hint">Pega un enlace de YouTube</p>
+            <div class="video-url-input-wrap">
+              <input
+                type="url"
+                id="detalle-video-url"
+                placeholder="https://youtube.com/watch?v=…"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="URL de YouTube"
+              >
+              <button class="video-url-btn" onclick="cargarVideoUrl()" aria-label="Cargar video">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Estado: con video — iframe de YouTube -->
+          <div class="modal-detalle__video-wrapper" id="detalle-video-wrapper" style="display:none;">
             <iframe
               id="detalle-video-iframe"
               src=""
@@ -252,6 +276,13 @@
               loading="lazy"
             ></iframe>
           </div>
+
+          <!-- Botón para quitar el video cargado -->
+          <button class="video-clear-btn" id="detalle-video-clear" style="display:none;" onclick="limpiarVideoModal()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Quitar video
+          </button>
+
         </div>
       </div>
 
@@ -335,12 +366,100 @@
         <span class="cart-total-label">Total</span>
         <span class="cart-total-amount" id="carrito-total">$0.00</span>
       </div>
-      <button class="cart-checkout-btn" onclick="alert('¡Próximamente! El checkout está en desarrollo.')">
+      <button class="cart-checkout-btn" onclick="abrirCheckoutDesdeCarrito()">
         Proceder al Pago →
       </button>
       <button class="cart-clear-btn" onclick="vaciarCarrito()">Vaciar carrito</button>
     </div>
   </aside>
+
+  <!-- ═══ MODAL PAGO ════════════════════════════════════ -->
+  <div id="modal-pago" role="dialog" aria-modal="true" aria-labelledby="pago-titulo">
+    <div class="modal-pago__backdrop" onclick="cerrarModalPago()"></div>
+    <div class="modal-pago__content">
+      <div class="modal-pago__header">
+        <div class="modal-pago__header-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div>
+          <h3 id="pago-titulo">Datos de Pago</h3>
+          <p class="modal-pago__subtitle" id="pago-subtitulo">—</p>
+        </div>
+        <button class="modal-pago__close" onclick="cerrarModalPago()" aria-label="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="form-pago" class="modal-pago__form" novalidate autocomplete="off">
+        <div class="modal-pago__card-preview" id="pago-card-preview" aria-hidden="true">
+          <div class="card-preview__chip"></div>
+          <div class="card-preview__number" id="preview-numero">•••• •••• •••• ••••</div>
+          <div class="card-preview__row">
+            <div>
+              <div class="card-preview__label">Titular</div>
+              <div class="card-preview__value" id="preview-nombre">TU NOMBRE</div>
+            </div>
+            <div>
+              <div class="card-preview__label">Vence</div>
+              <div class="card-preview__value" id="preview-expiry">MM/YY</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-pago__fields">
+          <div class="input-group">
+            <label for="pago-nombre">Nombre del Titular</label>
+            <input type="text" id="pago-nombre" placeholder="Como aparece en la tarjeta" maxlength="26" autocomplete="cc-name">
+          </div>
+          <div class="input-group">
+            <label for="pago-numero">Número de Tarjeta</label>
+            <div class="card-input-wrap">
+              <input type="text" id="pago-numero" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" inputmode="numeric">
+              <span class="card-input-wrap__icon" id="card-brand-icon" aria-hidden="true">
+                <svg width="28" height="18" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="32" rx="4" fill="#1a1a24"/>
+                  <circle cx="18" cy="16" r="10" fill="#eb5757" opacity="0.9"/>
+                  <circle cx="30" cy="16" r="10" fill="#f59e0b" opacity="0.85"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+          <div class="modal-pago__row">
+            <div class="input-group">
+              <label for="pago-expiry">Fecha de Vencimiento</label>
+              <input type="text" id="pago-expiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric">
+            </div>
+            <div class="input-group">
+              <label for="pago-cvv">CVV <span class="label-tag">Código</span></label>
+              <input type="text" id="pago-cvv" placeholder="•••" maxlength="4" autocomplete="cc-csc" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-pago__footer">
+          <button type="button" class="btn-cancel" onclick="cerrarModalPago()">Cancelar</button>
+          <button type="submit" class="btn-save modal-pago__submit" id="pago-submit-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <span id="pago-submit-txt">Pagar —</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ CUSTOM CONFIRM DIALOG ════════════════════════ -->
+  <div id="modal-confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg">
+    <div class="modal-confirm__content">
+      <p id="confirm-msg" class="modal-confirm__msg"></p>
+      <div class="modal-confirm__btns">
+        <button class="btn-cancel" id="confirm-no">Cancelar</button>
+        <button class="btn-danger" id="confirm-yes">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST CONTAINER ══════════════════════════════ -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <script src="script.js"></script>
 </body>

@@ -212,7 +212,6 @@ if (inputBusqueda) {
 // │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
 // └─────────────────────────────────────────────────────────────────────┘
 const albumVideos = {
-  1: "NF-kLy44Hls",
     // Ejemplo: 1: "dQw4w9WgXcQ"
 };
 
@@ -344,7 +343,9 @@ function renderizarRecomendados(discoActualId) {
              aria-label="${d.titulo} por ${d.artista}"
              onclick="abrirModalDetalle(${discoJSON})"
              onkeydown="if(event.key==='Enter')abrirModalDetalle(${discoJSON})">
-            <img src="${img}" alt="${d.titulo}" loading="lazy">
+            <div class="recomendado-card__img-wrap">
+                <img src="${img}" alt="${d.titulo}" loading="lazy">
+            </div>
             <div class="recomendado-card__info">
                 <div class="recomendado-card__titulo">${d.titulo}</div>
                 <div class="recomendado-card__artista">${d.artista}</div>
@@ -354,25 +355,83 @@ function renderizarRecomendados(discoActualId) {
 }
 
 function _cargarVideo(discoId) {
-    const videoContainer = document.getElementById('detalle-video-container');
-    const videoIframe    = document.getElementById('detalle-video-iframe');
-    const videoId        = albumVideos[discoId];
-
+    const videoId = albumVideos[discoId];
     if (videoId) {
-        videoIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
-        videoContainer.style.display = 'block';
+        _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`);
     } else {
-        videoIframe.src = '';
-        videoContainer.style.display = 'none';
+        _mostrarPlaceholderVideo();
     }
+}
+
+// Muestra el iframe con una src dada
+function _mostrarIframeVideo(src) {
+    document.getElementById('detalle-video-iframe').src  = src;
+    document.getElementById('detalle-video-wrapper').style.display = 'block';
+    document.getElementById('detalle-video-placeholder').style.display = 'none';
+    document.getElementById('detalle-video-clear').style.display      = 'flex';
+    document.getElementById('detalle-video-label-txt').textContent    = 'Escucha el álbum';
+}
+
+// Muestra el estado vacío con el input de URL
+function _mostrarPlaceholderVideo() {
+    const iframe = document.getElementById('detalle-video-iframe');
+    if (iframe) iframe.src = '';
+    document.getElementById('detalle-video-wrapper').style.display    = 'none';
+    document.getElementById('detalle-video-placeholder').style.display = 'flex';
+    document.getElementById('detalle-video-clear').style.display      = 'none';
+    document.getElementById('detalle-video-label-txt').textContent    = 'Escucha el álbum';
+    // Limpiar input
+    const urlInput = document.getElementById('detalle-video-url');
+    if (urlInput) urlInput.value = '';
+}
+
+// Extrae el videoId de distintos formatos de URL de YouTube
+function _extraerYouTubeId(url) {
+    try {
+        const u = new URL(url.trim());
+        // youtube.com/watch?v=ID
+        if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
+            return u.searchParams.get('v');
+        }
+        // youtu.be/ID
+        if (u.hostname === 'youtu.be') {
+            return u.pathname.slice(1).split('?')[0];
+        }
+        // youtube.com/embed/ID
+        const embedMatch = u.pathname.match(/\/embed\/([^/?]+)/);
+        if (embedMatch) return embedMatch[1];
+    } catch {}
+    // Fallback: buscar patrón v=... en texto plano
+    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    return match ? match[1] : null;
+}
+
+// Llamado desde el botón "→" del placeholder
+function cargarVideoUrl() {
+    const input   = document.getElementById('detalle-video-url');
+    const rawUrl  = input ? input.value.trim() : '';
+    if (!rawUrl) {
+        mostrarToast('Pega primero un enlace de YouTube.', 'warning');
+        return;
+    }
+    const videoId = _extraerYouTubeId(rawUrl);
+    if (!videoId) {
+        mostrarToast('No se reconoció el enlace. Usa un URL de YouTube válido.', 'error');
+        return;
+    }
+    _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`);
+}
+
+// Quita el video y vuelve al placeholder
+function limpiarVideoModal() {
+    _mostrarPlaceholderVideo();
 }
  
 function cerrarModalDetalle() {
     document.getElementById('modal-detalle').classList.remove('open');
     document.body.style.overflow = '';
-    // Detener el video al cerrar el modal (vaciar src del iframe)
-    const iframe = document.getElementById('detalle-video-iframe');
-    if (iframe) iframe.src = '';
+    // Detener el video al cerrar el modal
+    _mostrarPlaceholderVideo();
     discoActivo = null;
 }
  
@@ -486,10 +545,16 @@ async function agregarAlCarritoDesdeModal() {
 
     if (valido === null) {
         // Error de red: advertir pero permitir continuar
-        const continuar = confirm(`⚠️ ${error}\n¿Deseas añadirlo al carrito de todas formas?`);
-        if (!continuar) return;
+        mostrarConfirm(`⚠️ ${error}\n¿Deseas añadirlo al carrito de todas formas?`,
+            () => {
+                const discoParaCarrito = discoActualizado || discoActivo;
+                agregarAlCarrito(discoParaCarrito);
+                cerrarModalDetalle();
+            }
+        );
+        return;
     } else if (!valido) {
-        alert(`❌ Lo sentimos, "${discoActivo.titulo}" ya no tiene stock disponible.`);
+        mostrarToast(`"${discoActivo.titulo}" ya no tiene stock disponible.`, 'error');
         // Actualizar datos locales y re-renderizar
         if (discoActualizado) {
             const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
@@ -523,10 +588,11 @@ function eliminarDelCarrito(id) {
  
 function vaciarCarrito() {
     if (!carrito.length) return;
-    if (!confirm('¿Vaciar el carrito?')) return;
-    carrito = [];
-    guardarCarrito();
-    renderizarCarrito();
+    mostrarConfirm('¿Vaciar el carrito? Se eliminarán todos los vinilos.', () => {
+        carrito = [];
+        guardarCarrito();
+        renderizarCarrito();
+    });
 }
  
 // ── 8. CART PANEL TOGGLE ──────────────────────────
@@ -552,59 +618,236 @@ function abrirCarrito() {
 // ── 9. COMPRA ─────────────────────────────────────
 function comprarDesdeModal() {
     if (!discoActivo) return;
-    comprar(discoActivo.id, discoActivo.stock, discoActivo.precio);
+    abrirModalPago(discoActivo);
 }
- 
-async function comprar(id, stockActual, precio) {
+
+// ── Init listeners del input de video ─────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const urlInput = document.getElementById('detalle-video-url');
+    if (urlInput) {
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); cargarVideoUrl(); }
+        });
+    }
+});
+
+
+function mostrarToast(mensaje, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const iconos = {
+        success: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+        error:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+        warning: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        info:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${tipo}`;
+    toast.innerHTML = `<span class="toast__icon">${iconos[tipo] || iconos.info}</span><span>${mensaje}</span>`;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('toast--visible'));
+    });
+
+    const dur = tipo === 'error' ? 5000 : 3500;
+    setTimeout(() => {
+        toast.classList.remove('toast--visible');
+        setTimeout(() => toast.remove(), 350);
+    }, dur);
+}
+
+// ── CONFIRM PERSONALIZADO ─────────────────────────
+function mostrarConfirm(mensaje, callbackSi, callbackNo) {
+    const modal   = document.getElementById('modal-confirm');
+    const msgEl   = document.getElementById('confirm-msg');
+    const btnSi   = document.getElementById('confirm-yes');
+    const btnNo   = document.getElementById('confirm-no');
+
+    msgEl.textContent = mensaje;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const limpiar = () => {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+        btnSi.onclick = null;
+        btnNo.onclick = null;
+    };
+
+    btnSi.onclick = () => { limpiar(); callbackSi && callbackSi(); };
+    btnNo.onclick = () => { limpiar(); callbackNo && callbackNo(); };
+}
+
+// ── MODAL DE PAGO ─────────────────────────────────
+let _discoPagoActivo = null;
+
+function abrirModalPago(disco) {
+    _discoPagoActivo = disco;
+
+    // Actualizar subtítulo con disco y precio
+    const precio = Number(disco.precio).toFixed(2);
+    document.getElementById('pago-subtitulo').textContent = `${disco.titulo} — $${precio}`;
+    document.getElementById('pago-submit-txt').textContent = `Pagar $${precio}`;
+
+    // Limpiar campos
+    ['pago-nombre','pago-numero','pago-expiry','pago-cvv'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('preview-numero').textContent = '•••• •••• •••• ••••';
+    document.getElementById('preview-nombre').textContent  = 'TU NOMBRE';
+    document.getElementById('preview-expiry').textContent  = 'MM/YY';
+
+    const submitBtn = document.getElementById('pago-submit-btn');
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+
+    document.getElementById('modal-pago').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => document.getElementById('pago-nombre').focus(), 100);
+}
+
+function cerrarModalPago() {
+    document.getElementById('modal-pago').classList.remove('open');
+    document.body.style.overflow = '';
+    _discoPagoActivo = null;
+}
+
+// ── Formateo de inputs de tarjeta ─────────────────
+(function initPagoForm() {
+    // Espera a que el DOM esté listo
+    document.addEventListener('DOMContentLoaded', () => _bindPagoInputs());
+    if (document.readyState !== 'loading') _bindPagoInputs();
+})();
+
+function _bindPagoInputs() {
+    const numEl    = document.getElementById('pago-numero');
+    const nameEl   = document.getElementById('pago-nombre');
+    const expiryEl = document.getElementById('pago-expiry');
+    const cvvEl    = document.getElementById('pago-cvv');
+    if (!numEl) return;
+
+    numEl.addEventListener('input', e => {
+        let val = e.target.value.replace(/\D/g, '').slice(0, 16);
+        e.target.value = val.match(/.{1,4}/g)?.join(' ') || val;
+        const disp = val.padEnd(16, '•').match(/.{1,4}/g).join(' ');
+        document.getElementById('preview-numero').textContent = disp;
+    });
+
+    nameEl.addEventListener('input', e => {
+        const v = e.target.value.toUpperCase().slice(0, 26);
+        document.getElementById('preview-nombre').textContent = v || 'TU NOMBRE';
+    });
+
+    expiryEl.addEventListener('input', e => {
+        let val = e.target.value.replace(/\D/g, '').slice(0, 4);
+        if (val.length >= 3) val = val.slice(0,2) + '/' + val.slice(2);
+        e.target.value = val;
+        document.getElementById('preview-expiry').textContent = val || 'MM/YY';
+    });
+
+    cvvEl.addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    // Submit del formulario de pago
+    const formPago = document.getElementById('form-pago');
+    if (formPago) {
+        formPago.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await procesarPago();
+        });
+    }
+}
+
+async function procesarPago() {
+    if (!_discoPagoActivo) return;
+
+    const nombre = document.getElementById('pago-nombre').value.trim();
+    const numero = document.getElementById('pago-numero').value.replace(/\s/g, '');
+    const expiry = document.getElementById('pago-expiry').value.trim();
+    const cvv    = document.getElementById('pago-cvv').value.trim();
+
+    // Validación básica
+    if (!nombre) { mostrarToast('Por favor ingresa el nombre del titular.', 'error'); return; }
+    if (numero.length < 16) { mostrarToast('El número de tarjeta debe tener 16 dígitos.', 'error'); return; }
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) { mostrarToast('La fecha de vencimiento debe ser MM/YY.', 'error'); return; }
+    if (cvv.length < 3) { mostrarToast('El CVV debe tener al menos 3 dígitos.', 'error'); return; }
+
+    // Verificar sesión
     const usuario = localStorage.getItem('usuarioLogueado');
     if (!usuario) {
-        alert("¡Debes iniciar sesión para comprar.");
+        mostrarToast('Debes iniciar sesión para comprar.', 'warning');
+        cerrarModalPago();
         window.location.href = 'login.html';
         return;
     }
 
-    // Validar stock real en la API (evita datos locales obsoletos)
-    const { valido, stock, disco: discoActualizado, error } = await validarStockReal(id);
+    // Validar stock real
+    const submitBtn = document.getElementById('pago-submit-btn');
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    document.getElementById('pago-submit-txt').textContent = 'Procesando…';
 
-    if (valido === null) {
-        // Error de red: advertir y usar stock local como respaldo
-        const continuar = confirm(`⚠️ ${error}\n¿Deseas continuar con la compra de todas formas?`);
-        if (!continuar) return;
-    } else if (!valido) {
-        alert("❌ ¡Lo sentimos! Este vinilo ya no tiene stock disponible.");
+    const { valido, stock, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
+
+    if (valido === false) {
+        mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
         if (discoActualizado) {
-            const idx = todosLosDiscos.findIndex(d => d.id === id);
+            const idx = todosLosDiscos.findIndex(d => d.id === _discoPagoActivo.id);
             if (idx !== -1) todosLosDiscos[idx] = discoActualizado;
         }
         cargarDiscos();
+        cerrarModalPago();
         cerrarModalDetalle();
         return;
     }
 
-    // Usar precio actualizado de la API si está disponible
-    const precioFinal = discoActualizado ? discoActualizado.precio : precio;
+    if (valido === null) {
+        mostrarToast(error + ' — se intentará la compra de todas formas.', 'warning');
+    }
 
-    if (!confirm(`¿Quieres comprar este disco por $${Number(precioFinal).toFixed(2)}?`)) return;
- 
+    const precioFinal = discoActualizado ? discoActualizado.precio : _discoPagoActivo.precio;
+
     try {
-        const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}/compra`, {
+        const respuesta = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${_discoPagoActivo.id}/compra`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre_usuario: usuario })
         });
         const data = await respuesta.json();
         if (respuesta.ok) {
-            alert("✨ ¡Compra exitosa! El stock se ha actualizado.");
+            mostrarToast(`✨ ¡Compra exitosa! "${_discoPagoActivo.titulo}" es tuyo.`, 'success');
+            cerrarModalPago();
             cerrarModalDetalle();
             cargarDiscos();
         } else {
-            alert("❌ Error: " + (data.error || "No se pudo procesar la compra"));
+            mostrarToast('Error al procesar la compra: ' + (data.error || 'inténtalo de nuevo.'), 'error');
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+            document.getElementById('pago-submit-txt').textContent = `Pagar $${Number(precioFinal).toFixed(2)}`;
         }
-    } catch (error) {
-        console.error("Error en la compra:", error);
-        alert("Error de conexión con el servidor");
+    } catch (err) {
+        console.error('Error en la compra:', err);
+        mostrarToast('Error de conexión con el servidor.', 'error');
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+        document.getElementById('pago-submit-txt').textContent = `Pagar $${Number(precioFinal).toFixed(2)}`;
     }
 }
+
+// Checkout desde el carrito (botón "Proceder al Pago")
+function abrirCheckoutDesdeCarrito() {
+    if (!carrito.length) {
+        mostrarToast('Tu carrito está vacío.', 'warning');
+        return;
+    }
+    mostrarToast('El checkout completo estará disponible próximamente.', 'info');
+}
+
  
 // ── 10. INTERFAZ DE USUARIO ───────────────────────
 function actualizarInterfazUsuario() {
@@ -621,7 +864,9 @@ function actualizarInterfazUsuario() {
  
     if (usuario) {
         const adminLink = esAdmin
-            ? `<a href="admin.html" class="btn-ghost btn-sm">⚙️ Admin</a>` : '';
+            ? `<button class="cart-btn btn-sm admin-icon-btn" onclick="window.location.href='admin.html'" aria-label="Panel de administración" title="Panel Admin">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>` : '';
         authSection.innerHTML = `
             ${cartBtn}
             ${adminLink}
@@ -690,33 +935,34 @@ if (formEditar) {
                 body: JSON.stringify(datosActualizados)
             });
             if (res.ok) {
-                alert("✅ ¡Disco actualizado con éxito!");
+                mostrarToast('✅ Disco actualizado con éxito.', 'success');
                 cerrarModal();
                 cargarDiscos();
             } else {
                 const data = await res.json();
-                alert("❌ Error: " + (data.error || "No se pudo actualizar"));
+                mostrarToast('Error: ' + (data.error || 'No se pudo actualizar'), 'error');
             }
         } catch (err) {
             console.error("Error al actualizar:", err);
-            alert("Error de conexión con el servidor");
+            mostrarToast('Error de conexión con el servidor.', 'error');
         }
     });
 }
  
 // ── 13. ELIMINAR DISCO ────────────────────────────
 async function eliminarDisco(id, titulo) {
-    if (!confirm(`¿Borrar "${titulo}"?`)) return;
-    const nombre_usuario = localStorage.getItem('usuarioLogueado');
-    try {
-        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre_usuario })
-        });
-        if (res.ok) { alert("Eliminado"); cargarDiscos(); }
-        else { const d = await res.json(); alert("Error: " + (d.error || "No se pudo eliminar")); }
-    } catch (e) { console.error(e); alert("Error de conexión"); }
+    mostrarConfirm(`¿Borrar "${titulo}"? Esta acción no se puede deshacer.`, async () => {
+        const nombre_usuario = localStorage.getItem('usuarioLogueado');
+        try {
+            const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre_usuario })
+            });
+            if (res.ok) { mostrarToast('Disco eliminado correctamente.', 'success'); cargarDiscos(); }
+            else { const d = await res.json(); mostrarToast('Error: ' + (d.error || 'No se pudo eliminar'), 'error'); }
+        } catch (e) { console.error(e); mostrarToast('Error de conexión.', 'error'); }
+    });
 }
  
 // ── 14b. NOVEDADES & STORYTELLING ─────────────────
