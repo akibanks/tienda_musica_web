@@ -314,7 +314,7 @@ function _rellenarModalBase(disco, imgUrl, stock) {
     document.getElementById('detalle-precio').textContent  = `$${Number(disco.precio).toFixed(2)}`;
     document.getElementById('detalle-stock').textContent   = `${stock} unidades`;
 
-    // Set blurred background using same cover image
+    // Fondo difuminado con la misma portada
     const coverEl = document.querySelector('.modal-detalle__cover');
     if (coverEl) coverEl.style.setProperty('--cover-bg-url', `url("${imgUrl}")`);
 

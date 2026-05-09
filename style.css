@@ -1051,7 +1051,7 @@ button, .btn-login {
 
 .novedad-card__img-wrap {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1;
   overflow: hidden;
   background: var(--bg-raised);
 }
@@ -1375,7 +1375,7 @@ header .header-content {
 }
 
 .carrusel-card {
-  flex: 0 0 200px;
+  flex: 0 0 260px;
   background: var(--bg-surface);
   border-radius: var(--r-md);
   border: 1px solid var(--border-subtle);
