@@ -236,7 +236,6 @@ button, .btn-login {
   max-width: 1320px;
   margin: 0 auto;
   padding: 64px 32px 48px;
-  overflow: hidden;
 }
 
 .hero-strip::after {
@@ -290,31 +289,17 @@ button, .btn-login {
   line-height: 1.7;
 }
 
-.hero-visual {
-   position: relative;
-  z-index: 1;
-  /* Añadimos padding para que la sombra tenga espacio donde proyectarse */
-  padding: 50px; 
-  /* Aseguramos que nada se corte */
-  overflow: visible !important;
-}
+.hero-visual { position: relative; z-index: 1; }
 
 /* Spinning vinyl in hero */
 .vinyl-spin {
   width: clamp(160px, 18vw, 240px);
   height: clamp(160px, 18vw, 240px);
-  animation: vinyl-rotate 2s linear infinite;
-  /* El filtro proyecta hacia abajo (12px), por eso se corta abajo */
+  animation: vinyl-rotate 8s linear infinite;
   filter: drop-shadow(0 12px 40px rgba(245,158,11,0.22));
   cursor: pointer;
   transform-origin: center center;
   will-change: transform;
-
-  /* --- CORRECCIONES CRÍTICAS --- */
-  overflow: visible !important; /* Evita el recorte de la sombra */
-  border-radius: 50%;           /* Si hay algún residuo de color, será circular */
-  background: transparent;      /* Garantiza que no haya fondo sólido */
-  border: none;                 /* Elimina cualquier borde accidental */
 }
 
 /* Frena suavemente al hacer hover — efecto "poner el dedo" */
@@ -1068,5 +1053,3 @@ header .header-content {
 
 /* Modal display toggle */
 .modal[style*="flex"] { display: flex !important; }
-
-
