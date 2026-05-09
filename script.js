@@ -212,7 +212,7 @@ if (inputBusqueda) {
 // │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
 // └─────────────────────────────────────────────────────────────────────┘
 const albumVideos = {
-  1=  "NF-kLy44Hls"
+  1: "NF-kLy44Hls",
     // Ejemplo: 1: "dQw4w9WgXcQ"
 };
 
