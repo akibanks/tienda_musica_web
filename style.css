@@ -1638,6 +1638,73 @@ header .header-content {
   color: var(--amber);
 }
 
+/* ── Recomendaciones en el modal ── */
+.modal-detalle__recomendados {
+  margin-bottom: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.recomendados__label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.recomendados__lista {
+  display: flex;
+  gap: 10px;
+}
+
+.recomendado-card {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--t-fast), transform var(--t-fast);
+}
+
+.recomendado-card:hover {
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+}
+
+.recomendado-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.recomendado-card__info {
+  padding: 7px 9px 9px;
+}
+
+.recomendado-card__titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.recomendado-card__artista {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .modal-detalle__acciones {
   display: flex;
   gap: 10px;

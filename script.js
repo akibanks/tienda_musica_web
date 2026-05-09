@@ -212,8 +212,6 @@ if (inputBusqueda) {
 // │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
 // └─────────────────────────────────────────────────────────────────────┘
 const albumVideos = {
-
-    1: "NF-kLy44Hls",
     // Ejemplo: 1: "dQw4w9WgXcQ"
 };
 
@@ -319,6 +317,39 @@ function _rellenarModalBase(disco, imgUrl, stock) {
     const estadoEl = document.getElementById('detalle-estado');
     estadoEl.textContent = stock === 0 ? 'Sin stock' : stock <= 3 ? 'Últimas unidades' : 'En stock';
     estadoEl.style.color = stock === 0 ? '#fca5a5' : stock <= 3 ? '#fcd34d' : '#6ee7b7';
+
+    renderizarRecomendados(disco.id);
+}
+
+// Muestra 3 discos aleatorios del catálogo (excluyendo el disco actual)
+function renderizarRecomendados(discoActualId) {
+    const lista = document.getElementById('recomendados-lista');
+    if (!lista || todosLosDiscos.length === 0) return;
+
+    const pool = todosLosDiscos.filter(d => d.id !== discoActualId);
+    // Mezcla aleatoria y toma los primeros 3
+    const seleccion = pool
+        .map(d => ({ d, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .slice(0, 3)
+        .map(({ d }) => d);
+
+    lista.innerHTML = seleccion.map(d => {
+        const img = d.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=200';
+        const discoJSON = JSON.stringify(d).replace(/"/g, '&quot;');
+        return `
+        <div class="recomendado-card"
+             role="button" tabindex="0"
+             aria-label="${d.titulo} por ${d.artista}"
+             onclick="abrirModalDetalle(${discoJSON})"
+             onkeydown="if(event.key==='Enter')abrirModalDetalle(${discoJSON})">
+            <img src="${img}" alt="${d.titulo}" loading="lazy">
+            <div class="recomendado-card__info">
+                <div class="recomendado-card__titulo">${d.titulo}</div>
+                <div class="recomendado-card__artista">${d.artista}</div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function _cargarVideo(discoId) {
