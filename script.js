@@ -314,6 +314,10 @@ function _rellenarModalBase(disco, imgUrl, stock) {
     document.getElementById('detalle-precio').textContent  = `$${Number(disco.precio).toFixed(2)}`;
     document.getElementById('detalle-stock').textContent   = `${stock} unidades`;
 
+    // Set blurred background using same cover image
+    const coverEl = document.querySelector('.modal-detalle__cover');
+    if (coverEl) coverEl.style.setProperty('--cover-bg-url', `url("${imgUrl}")`);
+
     const estadoEl = document.getElementById('detalle-estado');
     estadoEl.textContent = stock === 0 ? 'Sin stock' : stock <= 3 ? 'Últimas unidades' : 'En stock';
     estadoEl.style.color = stock === 0 ? '#fca5a5' : stock <= 3 ? '#fcd34d' : '#6ee7b7';

@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (respuesta.ok) {
                     alert("✅ ¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
                     registroForm.reset();
-                    cambiarVista(); // Regresa al formulario de login
+                    cambiarVista('login'); // Regresa al formulario de login
                 } else {
                     alert("❌ Error: " + (data.error || "No se pudo crear la cuenta"));
                 }
@@ -79,15 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // --- FUNCIÓN PARA ALTERNAR LAS VISTAS ---
-window.cambiarVista = function() {
-    const vistaLogin = document.getElementById('vista-login');
-    const vistaRegistro = document.getElementById('vista-registro');
-    
-    if (vistaLogin.style.display === 'none') {
-        vistaLogin.style.display = 'block';
-        vistaRegistro.style.display = 'none';
-    } else {
-        vistaLogin.style.display = 'none';
-        vistaRegistro.style.display = 'block';
-    }
-};
+// Nota: cambiarVista() está definida en login.html y maneja el estado
+// visual de las pestañas (clase .active). No se redefine aquí para
+// no sobreescribir esa lógica.
+// La llamada a cambiarVista() dentro de los listeners sigue funcionando
+// porque la función del HTML ya estará disponible en el scope global.
