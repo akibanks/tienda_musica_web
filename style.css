@@ -2115,7 +2115,7 @@ header .header-content {
 
 /* Botón "Quitar video" */
 .video-clear-btn {
-  display: flex !important;
+  display: flex ;
   align-items: center !important;
   gap: 5px !important;
   background: none !important;
