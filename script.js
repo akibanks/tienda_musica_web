@@ -213,7 +213,7 @@ if (inputBusqueda) {
 // └─────────────────────────────────────────────────────────────────────┘
 const albumVideos = {
 
- 1: "8tPMRqxVQRir6K9E",
+    1: "NF-kLy44Hls",
     // Ejemplo: 1: "dQw4w9WgXcQ"
 };
 
