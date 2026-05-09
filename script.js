@@ -381,7 +381,6 @@ function _mostrarIframeVideo(src, esAdmin) {
 
 // Muestra el estado vacío con el input de URL
 function _mostrarPlaceholderVideo(esAdmin) {
-    // Si no se pasa el parámetro (ej. al cerrar el modal) lo leemos nosotros
     if (esAdmin === undefined) esAdmin = localStorage.getItem('esAdmin') === 'true';
 
     const iframe = document.getElementById('detalle-video-iframe');
@@ -390,14 +389,18 @@ function _mostrarPlaceholderVideo(esAdmin) {
     document.getElementById('detalle-video-clear').style.display   = 'none';
     document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
 
-    const placeholder = document.getElementById('detalle-video-placeholder');
+    const placeholder   = document.getElementById('detalle-video-placeholder');
+    const videoContainer = document.getElementById('detalle-video-container');
+
     if (esAdmin) {
-        // Admin: muestra el input para pegar URL
+        // Admin: muestra el contenedor completo con el input
+        if (videoContainer) videoContainer.style.display = '';
         placeholder.style.display = 'flex';
         const urlInput = document.getElementById('detalle-video-url');
         if (urlInput) urlInput.value = '';
     } else {
-        // Usuario normal: oculta toda la sección si no hay video
+        // Usuario normal: oculta todo el bloque de video
+        if (videoContainer) videoContainer.style.display = 'none';
         placeholder.style.display = 'none';
     }
 }
