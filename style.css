@@ -1473,6 +1473,8 @@ header .header-content {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .modal-detalle__cover img {
@@ -1480,8 +1482,9 @@ header .header-content {
   min-height: 0;
   width: 100%;
   object-fit: contain;
+  object-position: center center;
   display: block;
-  padding: 32px;
+  padding: 28px 28px 16px;
   filter: none;
   border-radius: 0;
 }
