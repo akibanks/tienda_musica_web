@@ -1457,16 +1457,16 @@ header .header-content {
   border: 1px solid var(--border-dim);
   border-radius: var(--r-xl);
   width: 100%;
-  max-width: 1100px;          /* ↑ antes 780px */
+  max-width: 1300px;
   box-shadow: var(--shadow-modal);
   display: flex;
   overflow: hidden;
   animation: modal-slide var(--t-med) var(--ease);
-  max-height: 92vh;
+  max-height: 94vh;
 }
 
 .modal-detalle__cover {
-  width: 420px;               /* ↑ antes 300px */
+  width: 520px;
   flex-shrink: 0;
   position: relative;
   background: var(--bg-raised);
@@ -1484,10 +1484,7 @@ header .header-content {
 }
 
 .modal-detalle__cover-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(255,107,107,0.06));
-  pointer-events: none;
+  display: none;
 }
 
 /* ── Video de YouTube ── */
