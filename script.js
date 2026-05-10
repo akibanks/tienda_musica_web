@@ -206,7 +206,9 @@ if (inputBusqueda) {
     });
 }
  
-
+const albumVideos = {
+    // Ejemplo: 1: "NF-kLy44Hls",
+};
 // ┌─────────────────────────────────────────────────────────────────────┐
 // │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
 // │                                                                     │
