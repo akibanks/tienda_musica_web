@@ -258,7 +258,7 @@ function abrirModalDetalle(disco) {
     document.getElementById('detalle-btn-carrito').disabled = stock === 0;
     document.getElementById('detalle-btn-comprar').disabled = stock === 0;
 
-    _cargarVideo(disco.id);
+    _cargarVideo(disco);
 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -291,7 +291,7 @@ function abrirModalStorytelling(disco) {
         `✍️ La historia de este álbum aún no ha sido escrita.\n\nAgrega su texto en el diccionario albumStories dentro de script.js usando la clave ${disco.id}.`;
     storyContainer.style.display = 'block';
 
-    _cargarVideo(disco.id);
+    _cargarVideo(disco);
 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
