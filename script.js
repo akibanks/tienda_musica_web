@@ -208,6 +208,16 @@ if (inputBusqueda) {
  
 
 // ┌─────────────────────────────────────────────────────────────────────┐
+// │ VIDEOS DE YOUTUBE POR ÁLBUM (respaldo manual)                       │
+// │ La fuente principal es el campo video_url de la base de datos.      │
+// │ Solo usa este diccionario si el disco no tiene video_url en la API. │
+// │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
+// └─────────────────────────────────────────────────────────────────────┘
+const albumVideos = {
+    // Ejemplo: 1: "NF-kLy44Hls",
+};
+
+// ┌─────────────────────────────────────────────────────────────────────┐
 // │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
 // │                                                                     │
 // │ Escribe aquí la historia o curiosidades de cada disco.              │
@@ -507,7 +517,7 @@ async function limpiarVideoModal() {
                 precio:      discoActivo.precio,
                 stock:       discoActivo.stock,
                 imagen_url:  discoActivo.imagen_url,
-                youtube_id:  null,
+                video_url:   null,
                 nombre_usuario
             })
         });
@@ -516,9 +526,9 @@ async function limpiarVideoModal() {
             mostrarToast('Error: ' + (d.error || 'No se pudo quitar el video'), 'error');
             return;
         }
-        discoActivo.youtube_id = null;
+        discoActivo.video_url = null;
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
-        if (idx !== -1) todosLosDiscos[idx].youtube_id = null;
+        if (idx !== -1) todosLosDiscos[idx].video_url = null;
 
         mostrarToast('Video eliminado de este álbum.', 'info');
     } catch (err) {
@@ -936,6 +946,8 @@ async function procesarPago() {
     }
 
     // ── Compra individual (desde el modal de detalle) ──
+
+    const { valido, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
 
     if (valido === false) {
         mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
