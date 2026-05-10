@@ -379,16 +379,15 @@ function _cargarVideo(disco) {
 function _mostrarIframeVideo(src, esAdmin) {
     if (esAdmin === undefined) esAdmin = localStorage.getItem('esAdmin') === 'true';
 
-    const wrapper = document.getElementById('detalle-video-wrapper');
-    const iframe  = document.getElementById('detalle-video-iframe');
+    const wrapper        = document.getElementById('detalle-video-wrapper');
+    const iframe         = document.getElementById('detalle-video-iframe');
+    const videoContainer = document.getElementById('detalle-video-container');
 
-    // 1. PRIMERO mostramos el contenedor
+    // Asegurar que el contenedor padre también sea visible
+    if (videoContainer) videoContainer.style.display = '';
     wrapper.style.display = 'block';
     document.getElementById('detalle-video-placeholder').style.display = 'none';
-    
-    // 2. LUEGO asignamos el src
     iframe.src = src;
-    
     document.getElementById('detalle-video-clear').style.display = esAdmin ? 'flex' : 'none';
     document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
 }
