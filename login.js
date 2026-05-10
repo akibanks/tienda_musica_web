@@ -1,5 +1,9 @@
 // ══════════════════════════════════════════════════════════
-//  VinylVibes — login.js
+//  VinylVibes — login.js  (v2)
+//
+//  Cambio principal: guarda el JWT devuelto por /login en
+//  localStorage como 'vv_token'. El resto del frontend lo
+//  usa para identificarse en endpoints protegidos.
 // ══════════════════════════════════════════════════════════
 
 const API = 'https://api-tienda-vinilos.onrender.com';
@@ -28,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const respuesta = await fetch(`${API}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // El backend acepta 'nombre_usuario' y lo mapea a la columna 'nombre'
                     body: JSON.stringify({
                         nombre_usuario: usuarioInput,
                         password:       passwordInput,
@@ -38,9 +41,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = await respuesta.json();
 
                 if (respuesta.ok) {
-                    // Guardar sesión — misma estructura que antes
+                    // Guardar token JWT + datos de sesión
+                    localStorage.setItem('vv_token',        data.token);
                     localStorage.setItem('usuarioLogueado', data.nombre);
-                    localStorage.setItem('esAdmin', data.es_admin ? 'true' : 'false');
+                    localStorage.setItem('esAdmin',         data.es_admin ? 'true' : 'false');
                     window.location.href = 'index.html';
                 } else {
                     mostrarError(mensajeError, data.error || 'Error al iniciar sesión.');
@@ -62,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const nuevoUsuario = document.getElementById('new-username').value.trim();
             const nuevaPass    = document.getElementById('new-password').value;
-            const mensajeReg   = document.getElementById('mensaje-registro') // BUG 8 FIX: era 'mensaje-error-registro', no existe en el HTML
+            const mensajeReg   = document.getElementById('mensaje-registro')
                               || document.getElementById('mensaje-error-login');
 
             if (!nuevoUsuario || !nuevaPass) {
@@ -93,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (respuesta.ok) {
                     mostrarExito(mensajeReg, '✅ ¡Cuenta creada! Ahora puedes iniciar sesión.');
                     registroForm.reset();
-                    // Regresar al formulario de login después de 1.5s
                     setTimeout(() => cambiarVista('login'), 1500);
                 } else {
                     mostrarError(mensajeReg, data.error || 'No se pudo crear la cuenta.');
@@ -120,6 +123,3 @@ function mostrarExito(el, texto) {
     el.innerText   = texto;
     el.style.color = '#6ee7b7';
 }
-
-// Nota: cambiarVista() está definida en login.html y controla
-// la visibilidad de las pestañas Login / Registro.
