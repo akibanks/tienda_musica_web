@@ -95,8 +95,8 @@ function renderizarDiscos(lista, listaTodo) {
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
         card.setAttribute('aria-label', `${disco.titulo} por ${disco.artista}`);
-        card.onclick = () => abrirModalDetalle({ id: disco.id });
-        card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') abrirModalDetalle({ id: disco.id }); };
+        card.onclick = () => abrirModalDetalle(disco);
+        card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') abrirModalDetalle(disco); };
  
         card.innerHTML = `
             <div class="disco-card__cover">
@@ -158,7 +158,7 @@ function renderizarCarrusel(lista) {
     track.innerHTML = recientes.map(disco => {
         const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         return `
-            <div class="carrusel-card" onclick="abrirModalDetalle({id:${disco.id}})" role="button" tabindex="0">
+            <div class="carrusel-card" onclick="abrirModalDetalle(${JSON.stringify(disco).replace(/"/g,'&quot;')})" role="button" tabindex="0">
                 <img class="carrusel-card__img" src="${img}" alt="${disco.titulo}" loading="lazy">
                 <div class="carrusel-card__info">
                     <h4>${disco.titulo}</h4>
@@ -239,10 +239,9 @@ y 5 donde puede escucharse, muy tenuemente, la risa del productor.`,
 
 // Abre el modal en modo COMPRA normal (desde el catálogo)
 function abrirModalDetalle(disco) {
-    // Siempre leer la versión más fresca desde todosLosDiscos
-    // (las cards solo pasan {id} para evitar datos obsoletos en closures)
-    const discoFresh = todosLosDiscos.find(d => d.id === disco.id);
-    if (!discoFresh) return;
+    // Siempre usar la versión más reciente del disco desde todosLosDiscos
+    // para que video_url y otros campos actualizados estén disponibles
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
     discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
@@ -272,8 +271,7 @@ function abrirModalDetalle(disco) {
 
 // Abre el modal en modo STORYTELLING (desde la sección Novedades)
 function abrirModalStorytelling(disco) {
-    const discoFresh = todosLosDiscos.find(d => d.id === disco.id);
-    if (!discoFresh) return;
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
     discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
@@ -345,8 +343,8 @@ function renderizarRecomendados(discoActualId) {
         <div class="recomendado-card"
              role="button" tabindex="0"
              aria-label="${d.titulo} por ${d.artista}"
-             onclick="abrirModalDetalle({id:${d.id}})"
-             onkeydown="if(event.key==='Enter')abrirModalDetalle({id:${d.id}})">
+             onclick="abrirModalDetalle(${discoJSON})"
+             onkeydown="if(event.key==='Enter')abrirModalDetalle(${discoJSON})">
             <div class="recomendado-card__img-wrap">
                 <img src="${img}" alt="${d.titulo}" loading="lazy">
             </div>
@@ -423,18 +421,23 @@ function _mostrarPlaceholderVideo(esAdmin) {
 
 // Extrae el videoId de distintos formatos de URL de YouTube
 function _extraerYouTubeId(url) {
+    if (!url) return null;
+    const str = url.trim();
+
+    // Si ya es un ID puro (11 caracteres alfanuméricos + guion/guion_bajo)
+    if (/^[A-Za-z0-9_-]{11}$/.test(str)) return str;
+
     try {
-        const u = new URL(url.trim());
-        if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
+        const u = new URL(str);
+        if (u.hostname.includes('youtube.com') && u.searchParams.get('v'))
             return u.searchParams.get('v');
-        }
-        if (u.hostname === 'youtu.be') {
+        if (u.hostname === 'youtu.be')
             return u.pathname.slice(1).split('?')[0];
-        }
         const embedMatch = u.pathname.match(/\/embed\/([^/?]+)/);
         if (embedMatch) return embedMatch[1];
     } catch {}
-    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+
+    const match = str.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
     return match ? match[1] : null;
 }
 
@@ -1186,8 +1189,8 @@ function renderizarNovedades(lista) {
         <article class="novedad-card"
             role="button" tabindex="0"
             aria-label="${disco.titulo} por ${disco.artista} — leer historia"
-            onclick="abrirModalStorytelling({id:${disco.id}})"
-            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling({id:${disco.id}})">
+            onclick="abrirModalStorytelling(${discoJSON})"
+            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling(${discoJSON})">
             <div class="novedad-card__img-wrap">
                 <img src="${img}" alt="${disco.titulo}" loading="lazy">
                 <div class="novedad-card__story-hint">
