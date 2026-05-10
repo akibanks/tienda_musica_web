@@ -45,7 +45,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     localStorage.setItem('vv_token',        data.token);
                     localStorage.setItem('usuarioLogueado', data.nombre);
                     localStorage.setItem('esAdmin',         data.es_admin ? 'true' : 'false');
-                    window.location.href = 'index.html';
+                    // Redirigir al index usando ruta absoluta compatible con GitHub Pages
+                    const base = window.location.pathname.replace('/login.html', '');
+                    window.location.href = base + '/index.html';
                 } else {
                     mostrarError(mensajeError, data.error || 'Error al iniciar sesión.');
                 }
