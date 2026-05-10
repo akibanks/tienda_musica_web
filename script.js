@@ -434,19 +434,24 @@ function _extraerYouTubeId(url) {
 async function cargarVideoUrl() {
     const input  = document.getElementById('detalle-video-url');
     const rawUrl = input ? input.value.trim() : '';
+
     if (!rawUrl) {
         mostrarToast('Pega primero un enlace de YouTube.', 'warning');
         return;
     }
+
     const videoId = _extraerYouTubeId(rawUrl);
     if (!videoId) {
         mostrarToast('No se reconoció el enlace. Usa un URL de YouTube válido.', 'error');
         return;
     }
+
     if (!discoActivo) return;
 
     try {
         const nombre_usuario = localStorage.getItem('usuarioLogueado');
+        
+        // Enviamos el ID del video bajo la clave 'video_url' para coincidir con la DB
         const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -456,26 +461,31 @@ async function cargarVideoUrl() {
                 precio:      discoActivo.precio,
                 stock:       discoActivo.stock,
                 imagen_url:  discoActivo.imagen_url,
-                youtube_id:  videoId,
+                video_url:   videoId, // Guardamos solo el ID (cabe en el varchar(20))
                 nombre_usuario
             })
         });
+
         if (!res.ok) {
             const d = await res.json();
             mostrarToast('Error: ' + (d.error || 'No se pudo guardar el video'), 'error');
             return;
         }
-        // Actualizar el objeto local para que _cargarVideo lo encuentre sin recargar
-        discoActivo.youtube_id = videoId;
-        // Refrescar lista en memoria
+
+        // Actualizamos la propiedad 'video_url' que es la que busca _cargarVideo
+        discoActivo.video_url = videoId;
+        
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
-        if (idx !== -1) todosLosDiscos[idx].youtube_id = videoId;
+        if (idx !== -1) todosLosDiscos[idx].video_url = videoId;
 
         mostrarToast('✅ Video guardado para este álbum.', 'success');
+        
+        // Mostramos el video inmediatamente
         _mostrarIframeVideo(
             `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`,
             true
         );
+
     } catch (err) {
         console.error(err);
         mostrarToast('Error de conexión con el servidor.', 'error');
