@@ -206,14 +206,6 @@ if (inputBusqueda) {
     });
 }
  
-// ── 6. MODAL DETALLE ──────────────────────────────
-// ┌─────────────────────────────────────────────────────────────────────┐
-// │ CONFIGURACIÓN DE VIDEOS POR ÁLBUM                                   │
-// │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
-// └─────────────────────────────────────────────────────────────────────┘
-const albumVideos = {
-    // Ejemplo: 1: "dQw4w9WgXcQ"
-};
 
 // ┌─────────────────────────────────────────────────────────────────────┐
 // │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
@@ -358,10 +350,17 @@ function renderizarRecomendados(discoActualId) {
     }).join('');
 }
 
-function _cargarVideo(discoId) {
+function _cargarVideo(disco) {
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-    // El youtube_id viene directamente del objeto disco cargado desde la API
-    const videoId = discoActivo?.youtube_id || albumVideos[discoId];
+    
+    // Intentamos obtener el ID de YouTube desde el campo de tu base de datos
+    // (Asegúrate de que el campo se llame exactamente video_url)
+    let videoId = disco.video_url ? _extraerYouTubeId(disco.video_url) : null;
+
+    // Si no hay en la base de datos, usamos el objeto manual como respaldo
+    if (!videoId) {
+        videoId = albumVideos[disco.id];
+    }
 
     if (videoId) {
         _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`, esAdmin);
