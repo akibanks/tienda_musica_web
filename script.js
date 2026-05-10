@@ -903,10 +903,10 @@ async function procesarPago() {
         return;
     }
 
-    // ── Compra individual (desde el modal de detalle) ──
-    // BUG 1 FIX: 'valido', 'discoActualizado' y 'error' no estaban declarados en este scope.
-    // Se agrega la llamada a validarStockReal() que los produce.
+  // ── Compra individual (desde el modal de detalle) ──
     const { valido, stock: _stock, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
+
+    if (valido === false) {
         mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
         if (discoActualizado) {
             const idx = todosLosDiscos.findIndex(d => d.id === _discoPagoActivo.id);
@@ -921,7 +921,6 @@ async function procesarPago() {
     if (valido === null) {
         mostrarToast(error + ' — se intentará la compra de todas formas.', 'warning');
     }
-
     const precioFinal = discoActualizado ? discoActualizado.precio : _discoPagoActivo.precio;
 
     try {
