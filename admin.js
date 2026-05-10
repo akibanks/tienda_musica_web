@@ -69,7 +69,7 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
         console.error('Error:', error);
         mostrarMensaje(mensaje, '❌ Error de conexión con el servidor.', false);
     } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Agregar Disco'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Guardar en Catálogo'; } // BUG 7 FIX: era 'Agregar Disco', no coincide con el HTML
     }
 });
 

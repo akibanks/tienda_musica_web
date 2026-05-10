@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const nuevoUsuario = document.getElementById('new-username').value.trim();
             const nuevaPass    = document.getElementById('new-password').value;
-            const mensajeReg   = document.getElementById('mensaje-error-registro')
+            const mensajeReg   = document.getElementById('mensaje-registro') // BUG 8 FIX: era 'mensaje-error-registro', no existe en el HTML
                               || document.getElementById('mensaje-error-login');
 
             if (!nuevoUsuario || !nuevaPass) {

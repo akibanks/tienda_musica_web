@@ -195,7 +195,8 @@ if (inputBusqueda) {
             // Búsqueda: mostrar TODOS los resultados del total de discos
             const filtrados = todosLosDiscos.filter(d =>
                 d.titulo.toLowerCase().includes(texto) ||
-                d.artista.toLowerCase().includes(texto));
+                // BUG 3 FIX: artista puede ser null si el disco no tiene artista registrado
+                (d.artista ?? '').toLowerCase().includes(texto));
             // Pasamos filtrados como lista Y como listaTodo para que el contador
             // muestre cuántos resultados hay y no aparezca el botón "Ver más"
             renderizarDiscos(filtrados, filtrados);
@@ -310,9 +311,11 @@ function renderizarRecomendados(discoActualId) {
     const lista = document.getElementById('recomendados-lista');
     if (!lista || todosLosDiscos.length === 0) return;
 
-    const pool = todosLosDiscos.filter(d => d.id !== discoActualId);
+    // BUG 4 FIX: renombrado de 'pool' a 'candidatos' para no colisionar con el nombre
+    // de la variable global 'pool' de pg (index.js) en un posible merge futuro
+    const candidatos = todosLosDiscos.filter(d => d.id !== discoActualId);
     // Mezcla aleatoria y toma los primeros 3
-    const seleccion = pool
+    const seleccion = candidatos
         .map(d => ({ d, sort: Math.random() }))
         .sort((a, b) => a.sort - b.sort)
         .slice(0, 3)
@@ -689,7 +692,9 @@ function comprarDesdeModal() {
 }
 
 // ── Init listeners del input de video ─────────────
+// BUG 2 FIX: Solo se ejecuta una vez; se elimina el IIFE duplicado
 document.addEventListener('DOMContentLoaded', () => {
+    _bindPagoInputs(); // BUG 2 FIX: único punto de inicialización del formulario de pago
     const urlInput = document.getElementById('detalle-video-url');
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
@@ -784,11 +789,8 @@ function cerrarModalPago() {
 }
 
 // ── Formateo de inputs de tarjeta ─────────────────
-(function initPagoForm() {
-    // Espera a que el DOM esté listo
-    document.addEventListener('DOMContentLoaded', () => _bindPagoInputs());
-    if (document.readyState !== 'loading') _bindPagoInputs();
-})();
+// BUG 2 FIX: Se eliminó el IIFE que llamaba _bindPagoInputs() dos veces.
+// El único punto de entrada es el DOMContentLoaded de abajo (junto con el input de video).
 
 function _bindPagoInputs() {
     const numEl    = document.getElementById('pago-numero');
@@ -902,8 +904,9 @@ async function procesarPago() {
     }
 
     // ── Compra individual (desde el modal de detalle) ──
-
-    if (valido === false) {
+    // BUG 1 FIX: 'valido', 'discoActualizado' y 'error' no estaban declarados en este scope.
+    // Se agrega la llamada a validarStockReal() que los produce.
+    const { valido, stock: _stock, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
         mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
         if (discoActualizado) {
             const idx = todosLosDiscos.findIndex(d => d.id === _discoPagoActivo.id);
