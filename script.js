@@ -360,7 +360,9 @@ function renderizarRecomendados(discoActualId) {
 
 function _cargarVideo(discoId) {
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-    const videoId = albumVideos[discoId];
+    // Primero buscar en localStorage (guardado por el usuario), luego en albumVideos hardcoded
+    const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
+    const videoId = videosGuardados[discoId] || albumVideos[discoId];
 
     if (videoId) {
         _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`, esAdmin);
@@ -389,7 +391,7 @@ function _mostrarPlaceholderVideo(esAdmin) {
     document.getElementById('detalle-video-clear').style.display   = 'none';
     document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
 
-    const placeholder   = document.getElementById('detalle-video-placeholder');
+    const placeholder    = document.getElementById('detalle-video-placeholder');
     const videoContainer = document.getElementById('detalle-video-container');
 
     if (esAdmin) {
@@ -439,11 +441,24 @@ function cargarVideoUrl() {
         mostrarToast('No se reconoció el enlace. Usa un URL de YouTube válido.', 'error');
         return;
     }
+    // Guardar en localStorage para que persista al refrescar
+    if (discoActivo) {
+        const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
+        videosGuardados[discoActivo.id] = videoId;
+        localStorage.setItem('vv_album_videos', JSON.stringify(videosGuardados));
+        mostrarToast('✅ Video guardado para este álbum.', 'success');
+    }
     _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`);
 }
 
 // Quita el video y vuelve al placeholder
 function limpiarVideoModal() {
+    if (discoActivo) {
+        const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
+        delete videosGuardados[discoActivo.id];
+        localStorage.setItem('vv_album_videos', JSON.stringify(videosGuardados));
+        mostrarToast('Video eliminado de este álbum.', 'info');
+    }
     _mostrarPlaceholderVideo();
 }
  

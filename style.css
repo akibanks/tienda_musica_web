@@ -1466,7 +1466,7 @@ header .header-content {
 }
 
 .modal-detalle__cover {
-  width: 520px;
+  width: 560px;
   flex-shrink: 0;
   position: relative;
   background: var(--bg-raised);
@@ -1478,9 +1478,8 @@ header .header-content {
 }
 
 .modal-detalle__cover img {
-  flex: 1;
-  min-height: 0;
   width: calc(100% - 32px);
+  height: 260px;
   margin: 16px 16px 8px;
   object-fit: contain;
   object-position: center center;
@@ -1489,6 +1488,7 @@ header .header-content {
   filter: none;
   border-radius: 16px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .modal-detalle__cover-overlay {
@@ -1498,7 +1498,8 @@ header .header-content {
 /* ── Video de YouTube ── */
 .modal-detalle__video {
   flex-shrink: 0;
-padding: 10px 8px 12px;  background: var(--bg-raised);
+  padding: 14px 16px 16px;
+  background: var(--bg-raised);
   border-top: 1px solid var(--border-subtle);
 }
 
