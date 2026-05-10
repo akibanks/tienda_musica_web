@@ -95,8 +95,8 @@ function renderizarDiscos(lista, listaTodo) {
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
         card.setAttribute('aria-label', `${disco.titulo} por ${disco.artista}`);
-        card.onclick = () => abrirModalDetalle(disco);
-        card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') abrirModalDetalle(disco); };
+        card.onclick = () => abrirModalDetalle({ id: disco.id });
+        card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') abrirModalDetalle({ id: disco.id }); };
  
         card.innerHTML = `
             <div class="disco-card__cover">
@@ -158,7 +158,7 @@ function renderizarCarrusel(lista) {
     track.innerHTML = recientes.map(disco => {
         const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         return `
-            <div class="carrusel-card" onclick="abrirModalDetalle(${JSON.stringify(disco).replace(/"/g,'&quot;')})" role="button" tabindex="0">
+            <div class="carrusel-card" onclick="abrirModalDetalle({id:${disco.id}})" role="button" tabindex="0">
                 <img class="carrusel-card__img" src="${img}" alt="${disco.titulo}" loading="lazy">
                 <div class="carrusel-card__info">
                     <h4>${disco.titulo}</h4>
@@ -239,9 +239,8 @@ y 5 donde puede escucharse, muy tenuemente, la risa del productor.`,
 
 // Abre el modal en modo COMPRA normal (desde el catálogo)
 function abrirModalDetalle(disco) {
-    // Siempre usar la versión más reciente del disco desde todosLosDiscos
-    // para que video_url y otros campos actualizados estén disponibles
-    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id);
+    if (!discoFresh) return;
     discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
@@ -271,7 +270,8 @@ function abrirModalDetalle(disco) {
 
 // Abre el modal en modo STORYTELLING (desde la sección Novedades)
 function abrirModalStorytelling(disco) {
-    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id);
+    if (!discoFresh) return;
     discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
@@ -343,8 +343,8 @@ function renderizarRecomendados(discoActualId) {
         <div class="recomendado-card"
              role="button" tabindex="0"
              aria-label="${d.titulo} por ${d.artista}"
-             onclick="abrirModalDetalle(${discoJSON})"
-             onkeydown="if(event.key==='Enter')abrirModalDetalle(${discoJSON})">
+             onclick="abrirModalDetalle({id:${d.id}})"
+             onkeydown="if(event.key==='Enter')abrirModalDetalle({id:${d.id}})">
             <div class="recomendado-card__img-wrap">
                 <img src="${img}" alt="${d.titulo}" loading="lazy">
             </div>
@@ -1189,8 +1189,8 @@ function renderizarNovedades(lista) {
         <article class="novedad-card"
             role="button" tabindex="0"
             aria-label="${disco.titulo} por ${disco.artista} — leer historia"
-            onclick="abrirModalStorytelling(${discoJSON})"
-            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling(${discoJSON})">
+            onclick="abrirModalStorytelling({id:${disco.id}})"
+            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling({id:${disco.id}})">
             <div class="novedad-card__img-wrap">
                 <img src="${img}" alt="${disco.titulo}" loading="lazy">
                 <div class="novedad-card__story-hint">
