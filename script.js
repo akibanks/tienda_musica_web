@@ -206,36 +206,8 @@ if (inputBusqueda) {
     });
 }
  
-const albumVideos = {
-    // Ejemplo: 1: "NF-kLy44Hls",
-};
-// ┌─────────────────────────────────────────────────────────────────────┐
-// │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
-// │                                                                     │
-// │ Escribe aquí la historia o curiosidades de cada disco.              │
-// │ La clave es el `id` del disco tal como llega de la API.            │
-// │                                                                     │
-// │   albumStories[<id>] = `Tu texto aquí.                             │
-// │   Puedes usar saltos de línea libremente.`;                         │
-// │                                                                     │
-// │ Los discos con historia aparecen destacados en la sección Novedades │
-// │ y al hacer clic abren el modal en modo Storytelling (sin precio).   │
-// └─────────────────────────────────────────────────────────────────────┘
-const albumStories = {
 
-    // ── EJEMPLO — reemplaza el 0 por el id real del disco ──────────────
-    0: `Grabado en tres noches de lluvia torrencial en los estudios Abbey Road,
-este álbum nació de un accidente: el ingeniero de sonido olvidó detener
-la cinta y capturó el momento exacto en que la banda encontró su sonido.
-
-Dicen que el vinilo original tiene un micro-surco oculto entre la pista 4
-y 5 donde puede escucharse, muy tenuemente, la risa del productor.`,
-
-    // ── Agrega más discos aquí ─────────────────────────────────────────
-    // 12: `Historia del disco con id 12...`,
-    // 37: `Historia del disco con id 37...`,
-
-};
+// ── 5b. BÚSQUEDA ──────────────────────────────────
 
 // Abre el modal en modo COMPRA normal (desde el catálogo)
 function abrirModalDetalle(disco) {
@@ -269,7 +241,7 @@ function abrirModalDetalle(disco) {
 }
 
 // Abre el modal en modo STORYTELLING (desde la sección Novedades)
-function abrirModalStorytelling(disco) {
+async function abrirModalStorytelling(disco) {
     const discoFresh = todosLosDiscos.find(d => d.id === disco.id);
     if (!discoFresh) return;
     discoActivo = discoFresh;
@@ -288,14 +260,24 @@ function abrirModalStorytelling(disco) {
     document.getElementById('detalle-meta-bloque').style.display    = 'none';
     document.getElementById('detalle-acciones-bloque').style.display = 'none';
 
-    // Mostrar historia
+    // Mostrar historia (fetch desde la API)
     const storyContainer = document.getElementById('detalle-story-container');
     const storyTexto     = document.getElementById('detalle-story-texto');
-    const story          = albumStories[discoFresh.id];
 
-    storyTexto.textContent = story ||
-        `✍️ La historia de este álbum aún no ha sido escrita.\n\nAgrega su texto en el diccionario albumStories dentro de script.js usando la clave ${discoFresh.id}.`;
+    storyTexto.textContent = 'Cargando historia…';
     storyContainer.style.display = 'block';
+
+    try {
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoFresh.id}/historia`);
+        if (res.ok) {
+            const data = await res.json();
+            storyTexto.textContent = data.cuerpo || data.resumen || '✍️ La historia de este álbum aún no ha sido escrita.';
+        } else {
+            storyTexto.textContent = '✍️ La historia de este álbum aún no ha sido escrita.';
+        }
+    } catch (e) {
+        storyTexto.textContent = '✍️ No se pudo cargar la historia. Revisa tu conexión.';
+    }
 
     _cargarVideo(discoFresh);
 
@@ -358,15 +340,8 @@ function renderizarRecomendados(discoActualId) {
 
 function _cargarVideo(disco) {
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-    
-    // Intentamos obtener el ID de YouTube desde el campo de tu base de datos
-    // (Asegúrate de que el campo se llame exactamente video_url)
-    let videoId = disco.video_url ? _extraerYouTubeId(disco.video_url) : null;
-
-    // Si no hay en la base de datos, usamos el objeto manual como respaldo
-    if (!videoId) {
-        videoId = albumVideos[disco.id];
-    }
+    // video_url viene directamente del backend (tabla producto_video)
+    const videoId = disco.video_url ? _extraerYouTubeId(disco.video_url) : null;
 
     if (videoId) {
         _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`, esAdmin);
@@ -460,20 +435,12 @@ async function cargarVideoUrl() {
 
     try {
         const nombre_usuario = localStorage.getItem('usuarioLogueado');
-        
-        // Enviamos el ID del video bajo la clave 'video_url' para coincidir con la DB
-        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}`, {
+
+        // Endpoint dedicado para videos (PUT /discos/:id/video)
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}/video`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                titulo:      discoActivo.titulo,
-                artista:     discoActivo.artista,
-                precio:      discoActivo.precio,
-                stock:       discoActivo.stock,
-                imagen_url:  discoActivo.imagen_url,
-                video_url:   videoId, // Guardamos solo el ID (cabe en el varchar(20))
-                nombre_usuario
-            })
+            body: JSON.stringify({ youtube_id: videoId, nombre_usuario })
         });
 
         if (!res.ok) {
@@ -482,20 +449,16 @@ async function cargarVideoUrl() {
             return;
         }
 
-        // Actualizamos la propiedad 'video_url' que es la que busca _cargarVideo
+        // Actualizar datos locales
         discoActivo.video_url = videoId;
-        
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
         if (idx !== -1) todosLosDiscos[idx].video_url = videoId;
 
         mostrarToast('✅ Video guardado para este álbum.', 'success');
-        
-        // Mostramos el video inmediatamente
         _mostrarIframeVideo(
             `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`,
             true
         );
-
     } catch (err) {
         console.error(err);
         mostrarToast('Error de conexión con el servidor.', 'error');
@@ -508,27 +471,20 @@ async function limpiarVideoModal() {
 
     try {
         const nombre_usuario = localStorage.getItem('usuarioLogueado');
-        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}`, {
-            method: 'PUT',
+        // Endpoint dedicado para eliminar el video
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}/video`, {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                titulo:      discoActivo.titulo,
-                artista:     discoActivo.artista,
-                precio:      discoActivo.precio,
-                stock:       discoActivo.stock,
-                imagen_url:  discoActivo.imagen_url,
-                youtube_id:  null,
-                nombre_usuario
-            })
+            body: JSON.stringify({ nombre_usuario })
         });
         if (!res.ok) {
             const d = await res.json();
             mostrarToast('Error: ' + (d.error || 'No se pudo quitar el video'), 'error');
             return;
         }
-        discoActivo.youtube_id = null;
+        discoActivo.video_url = null;
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
-        if (idx !== -1) todosLosDiscos[idx].youtube_id = null;
+        if (idx !== -1) todosLosDiscos[idx].video_url = null;
 
         mostrarToast('Video eliminado de este álbum.', 'info');
     } catch (err) {
@@ -1095,10 +1051,16 @@ function manejarAuth() {
 function abrirModalEditar(disco) {
     document.getElementById('edit-id').value      = disco.id;
     document.getElementById('edit-titulo').value  = disco.titulo;
-    document.getElementById('edit-artista').value = disco.artista;
+    document.getElementById('edit-artista').value = disco.artista || '';
     document.getElementById('edit-precio').value  = disco.precio;
     document.getElementById('edit-stock').value   = disco.stock;
     document.getElementById('edit-imagen').value  = disco.imagen_url || '';
+    // Campos nuevos del esquema
+    const editAnio   = document.getElementById('edit-anio');
+    const editGenero = document.getElementById('edit-genero');
+    if (editAnio)   editAnio.value   = disco.anio   || '';
+    if (editGenero) editGenero.value = disco.genero || '';
+
     document.getElementById('modal-edicion').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -1122,6 +1084,8 @@ if (formEditar) {
             precio:       parseFloat(document.getElementById('edit-precio').value),
             stock:        parseInt(document.getElementById('edit-stock').value),
             imagen_url:   document.getElementById('edit-imagen').value,
+            anio:         parseInt(document.getElementById('edit-anio')?.value) || null,
+            genero:       document.getElementById('edit-genero')?.value || null,
             nombre_usuario
         };
  
@@ -1164,8 +1128,9 @@ async function eliminarDisco(id, titulo) {
  
 // ── 14b. NOVEDADES & STORYTELLING ─────────────────
 // Renderiza el grid de la sección #section-novedades.
-// Muestra todos los discos; los que tienen historia en albumStories
-// se destacan con un badge. Al hacer clic abren el modal en modo story.
+// Renderiza el grid de la sección #section-novedades.
+// Muestra todos los discos; al hacer clic abren el modal
+// en modo Storytelling y cargan la historia desde la API.
 function renderizarNovedades(lista) {
     const grid = document.getElementById('novedades-grid');
     if (!grid) return;
@@ -1176,13 +1141,7 @@ function renderizarNovedades(lista) {
     }
 
     grid.innerHTML = lista.map(disco => {
-        const img      = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
-        const tieneStory = albumStories.hasOwnProperty(disco.id);
-        const badge    = tieneStory
-            ? `<span class="novedad-card__has-story">Historia</span>` : '';
-
-        // Serializar para el onclick
-        const discoJSON = JSON.stringify(disco).replace(/"/g, '&quot;');
+        const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
 
         return `
         <article class="novedad-card"
@@ -1198,7 +1157,6 @@ function renderizarNovedades(lista) {
                         Leer historia
                     </span>
                 </div>
-                ${badge}
             </div>
             <div class="novedad-card__info">
                 <div class="novedad-card__titulo">${disco.titulo}</div>
