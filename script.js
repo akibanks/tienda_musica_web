@@ -360,9 +360,8 @@ function renderizarRecomendados(discoActualId) {
 
 function _cargarVideo(discoId) {
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
-    // Primero buscar en localStorage (guardado por el usuario), luego en albumVideos hardcoded
-    const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
-    const videoId = videosGuardados[discoId] || albumVideos[discoId];
+    // El youtube_id viene directamente del objeto disco cargado desde la API
+    const videoId = discoActivo?.youtube_id || albumVideos[discoId];
 
     if (videoId) {
         _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`, esAdmin);
@@ -411,27 +410,23 @@ function _mostrarPlaceholderVideo(esAdmin) {
 function _extraerYouTubeId(url) {
     try {
         const u = new URL(url.trim());
-        // youtube.com/watch?v=ID
         if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
             return u.searchParams.get('v');
         }
-        // youtu.be/ID
         if (u.hostname === 'youtu.be') {
             return u.pathname.slice(1).split('?')[0];
         }
-        // youtube.com/embed/ID
         const embedMatch = u.pathname.match(/\/embed\/([^/?]+)/);
         if (embedMatch) return embedMatch[1];
     } catch {}
-    // Fallback: buscar patrón v=... en texto plano
     const match = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
     return match ? match[1] : null;
 }
 
-// Llamado desde el botón "→" del placeholder
-function cargarVideoUrl() {
-    const input   = document.getElementById('detalle-video-url');
-    const rawUrl  = input ? input.value.trim() : '';
+// Llamado desde el botón "Añadir video" — guarda en la base de datos
+async function cargarVideoUrl() {
+    const input  = document.getElementById('detalle-video-url');
+    const rawUrl = input ? input.value.trim() : '';
     if (!rawUrl) {
         mostrarToast('Pega primero un enlace de YouTube.', 'warning');
         return;
@@ -441,23 +436,77 @@ function cargarVideoUrl() {
         mostrarToast('No se reconoció el enlace. Usa un URL de YouTube válido.', 'error');
         return;
     }
-    // Guardar en localStorage para que persista al refrescar
-    if (discoActivo) {
-        const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
-        videosGuardados[discoActivo.id] = videoId;
-        localStorage.setItem('vv_album_videos', JSON.stringify(videosGuardados));
+    if (!discoActivo) return;
+
+    try {
+        const nombre_usuario = localStorage.getItem('usuarioLogueado');
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                titulo:      discoActivo.titulo,
+                artista:     discoActivo.artista,
+                precio:      discoActivo.precio,
+                stock:       discoActivo.stock,
+                imagen_url:  discoActivo.imagen_url,
+                youtube_id:  videoId,
+                nombre_usuario
+            })
+        });
+        if (!res.ok) {
+            const d = await res.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo guardar el video'), 'error');
+            return;
+        }
+        // Actualizar el objeto local para que _cargarVideo lo encuentre sin recargar
+        discoActivo.youtube_id = videoId;
+        // Refrescar lista en memoria
+        const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
+        if (idx !== -1) todosLosDiscos[idx].youtube_id = videoId;
+
         mostrarToast('✅ Video guardado para este álbum.', 'success');
+        _mostrarIframeVideo(
+            `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`,
+            true
+        );
+    } catch (err) {
+        console.error(err);
+        mostrarToast('Error de conexión con el servidor.', 'error');
     }
-    _mostrarIframeVideo(`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`);
 }
 
-// Quita el video y vuelve al placeholder
-function limpiarVideoModal() {
-    if (discoActivo) {
-        const videosGuardados = JSON.parse(localStorage.getItem('vv_album_videos') || '{}');
-        delete videosGuardados[discoActivo.id];
-        localStorage.setItem('vv_album_videos', JSON.stringify(videosGuardados));
+// Llamado desde el botón "Quitar video" — borra de la base de datos
+async function limpiarVideoModal() {
+    if (!discoActivo) { _mostrarPlaceholderVideo(); return; }
+
+    try {
+        const nombre_usuario = localStorage.getItem('usuarioLogueado');
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                titulo:      discoActivo.titulo,
+                artista:     discoActivo.artista,
+                precio:      discoActivo.precio,
+                stock:       discoActivo.stock,
+                imagen_url:  discoActivo.imagen_url,
+                youtube_id:  null,
+                nombre_usuario
+            })
+        });
+        if (!res.ok) {
+            const d = await res.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo quitar el video'), 'error');
+            return;
+        }
+        discoActivo.youtube_id = null;
+        const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
+        if (idx !== -1) todosLosDiscos[idx].youtube_id = null;
+
         mostrarToast('Video eliminado de este álbum.', 'info');
+    } catch (err) {
+        console.error(err);
+        mostrarToast('Error de conexión con el servidor.', 'error');
     }
     _mostrarPlaceholderVideo();
 }
