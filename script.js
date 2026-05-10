@@ -371,22 +371,19 @@ function _cargarVideo(disco) {
 
 // Muestra el iframe con una src dada
 function _mostrarIframeVideo(src, esAdmin) {
-    // Si no sabemos si es admin, lo consultamos del localStorage
     if (esAdmin === undefined) esAdmin = localStorage.getItem('esAdmin') === 'true';
 
     const wrapper = document.getElementById('detalle-video-wrapper');
     const iframe  = document.getElementById('detalle-video-iframe');
 
-    // 1. PRIMERO hacemos visible el contenedor
+    // 1. PRIMERO mostramos el contenedor
     wrapper.style.display = 'block';
     document.getElementById('detalle-video-placeholder').style.display = 'none';
     
-    // 2. DESPUÉS asignamos el src para asegurar que el navegador inicie la carga
+    // 2. LUEGO asignamos el src
     iframe.src = src;
     
-    // Control de visibilidad del botón de borrar para el admin
     document.getElementById('detalle-video-clear').style.display = esAdmin ? 'flex' : 'none';
-    
     document.getElementById('detalle-video-label-txt').textContent = 'Escucha el álbum';
 }
 
