@@ -1498,8 +1498,7 @@ header .header-content {
 /* ── Video de YouTube ── */
 .modal-detalle__video {
   flex-shrink: 0;
-  padding: 12px 14px 14px;
-  background: var(--bg-raised);
+padding: 10px 8px 12px;  background: var(--bg-raised);
   border-top: 1px solid var(--border-subtle);
 }
 
