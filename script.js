@@ -208,16 +208,6 @@ if (inputBusqueda) {
  
 
 // ┌─────────────────────────────────────────────────────────────────────┐
-// │ VIDEOS DE YOUTUBE POR ÁLBUM (respaldo manual)                       │
-// │ La fuente principal es el campo video_url de la base de datos.      │
-// │ Solo usa este diccionario si el disco no tiene video_url en la API. │
-// │   albumVideos[<id_del_disco>] = "<youtube_video_id>";               │
-// └─────────────────────────────────────────────────────────────────────┘
-const albumVideos = {
-    // Ejemplo: 1: "NF-kLy44Hls",
-};
-
-// ┌─────────────────────────────────────────────────────────────────────┐
 // │ HISTORIAS Y CURIOSIDADES DE CADA ÁLBUM                             │
 // │                                                                     │
 // │ Escribe aquí la historia o curiosidades de cada disco.              │
@@ -247,17 +237,20 @@ y 5 donde puede escucharse, muy tenuemente, la risa del productor.`,
 
 // Abre el modal en modo COMPRA normal (desde el catálogo)
 function abrirModalDetalle(disco) {
-    discoActivo = disco;
+    // Siempre usar la versión más reciente del disco desde todosLosDiscos
+    // para que video_url y otros campos actualizados estén disponibles
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
+    discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
     const content = document.querySelector('.modal-detalle__content');
-    const stock   = Number(disco.stock);
-    const imgUrl  = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+    const stock   = Number(discoFresh.stock);
+    const imgUrl  = discoFresh.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
 
     // Quitar modo storytelling si venía de novedades
     content.classList.remove('modal-detalle__content--story');
 
-    _rellenarModalBase(disco, imgUrl, stock);
+    _rellenarModalBase(discoFresh, imgUrl, stock);
 
     // Mostrar precio y acciones; ocultar historia
     document.getElementById('detalle-meta-bloque').style.display    = '';
@@ -268,7 +261,7 @@ function abrirModalDetalle(disco) {
     document.getElementById('detalle-btn-carrito').disabled = stock === 0;
     document.getElementById('detalle-btn-comprar').disabled = stock === 0;
 
-    _cargarVideo(disco);
+    _cargarVideo(discoFresh);
 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -276,17 +269,18 @@ function abrirModalDetalle(disco) {
 
 // Abre el modal en modo STORYTELLING (desde la sección Novedades)
 function abrirModalStorytelling(disco) {
-    discoActivo = disco;
+    const discoFresh = todosLosDiscos.find(d => d.id === disco.id) || disco;
+    discoActivo = discoFresh;
 
     const modal   = document.getElementById('modal-detalle');
     const content = document.querySelector('.modal-detalle__content');
-    const stock   = Number(disco.stock);
-    const imgUrl  = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+    const stock   = Number(discoFresh.stock);
+    const imgUrl  = discoFresh.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
 
     // Activar modo storytelling
     content.classList.add('modal-detalle__content--story');
 
-    _rellenarModalBase(disco, imgUrl, stock);
+    _rellenarModalBase(discoFresh, imgUrl, stock);
 
     // Ocultar precio y botones de compra
     document.getElementById('detalle-meta-bloque').style.display    = 'none';
@@ -295,13 +289,13 @@ function abrirModalStorytelling(disco) {
     // Mostrar historia
     const storyContainer = document.getElementById('detalle-story-container');
     const storyTexto     = document.getElementById('detalle-story-texto');
-    const story          = albumStories[disco.id];
+    const story          = albumStories[discoFresh.id];
 
     storyTexto.textContent = story ||
-        `✍️ La historia de este álbum aún no ha sido escrita.\n\nAgrega su texto en el diccionario albumStories dentro de script.js usando la clave ${disco.id}.`;
+        `✍️ La historia de este álbum aún no ha sido escrita.\n\nAgrega su texto en el diccionario albumStories dentro de script.js usando la clave ${discoFresh.id}.`;
     storyContainer.style.display = 'block';
 
-    _cargarVideo(disco);
+    _cargarVideo(discoFresh);
 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -517,7 +511,7 @@ async function limpiarVideoModal() {
                 precio:      discoActivo.precio,
                 stock:       discoActivo.stock,
                 imagen_url:  discoActivo.imagen_url,
-                video_url:   null,
+                youtube_id:  null,
                 nombre_usuario
             })
         });
@@ -526,9 +520,9 @@ async function limpiarVideoModal() {
             mostrarToast('Error: ' + (d.error || 'No se pudo quitar el video'), 'error');
             return;
         }
-        discoActivo.video_url = null;
+        discoActivo.youtube_id = null;
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
-        if (idx !== -1) todosLosDiscos[idx].video_url = null;
+        if (idx !== -1) todosLosDiscos[idx].youtube_id = null;
 
         mostrarToast('Video eliminado de este álbum.', 'info');
     } catch (err) {
@@ -946,8 +940,6 @@ async function procesarPago() {
     }
 
     // ── Compra individual (desde el modal de detalle) ──
-
-    const { valido, disco: discoActualizado, error } = await validarStockReal(_discoPagoActivo.id);
 
     if (valido === false) {
         mostrarToast(`"${_discoPagoActivo.titulo}" ya no tiene stock disponible.`, 'error');
