@@ -1213,25 +1213,25 @@ if (formEditar) {
  
 // ── 13. ELIMINAR DISCO ────────────────────────────
 async function eliminarDisco(id, titulo) {
-    const ok = await confirmar(`¿Borrar <strong>"${titulo}"</strong>?<br>Esta acción no se puede deshacer.`, 'Borrar', 'Cancelar');
-    if (!ok) return;
-    try {
-        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
-            method:  'DELETE',
-            headers: authHeaders(),
-            body:    JSON.stringify({}),
-        });
-        if (res.ok) {
-            mostrarToast('Disco eliminado correctamente.', 'success');
-            cargarDiscos();
-        } else {
-            const d = await res.json();
-            mostrarToast('Error: ' + (d.error || 'No se pudo eliminar'), 'error');
+    mostrarConfirm(`¿Borrar <strong>"${titulo}"</strong>?<br>Esta acción no se puede deshacer.`, async () => {
+        try {
+            const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
+                method:  'DELETE',
+                headers: authHeaders(),
+                body:    JSON.stringify({}),
+            });
+            if (res.ok) {
+                mostrarToast('Disco eliminado correctamente.', 'success');
+                cargarDiscos();
+            } else {
+                const d = await res.json();
+                mostrarToast('Error: ' + (d.error || 'No se pudo eliminar'), 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarToast('Error de conexión.', 'error');
         }
-    } catch (e) {
-        console.error(e);
-        mostrarToast('Error de conexión.', 'error');
-    }
+    });
 }
  
 // ── 14b. NOVEDADES & STORYTELLING ─────────────────
