@@ -36,8 +36,7 @@ Definimos restricciones $(min, max)$ estrictas:
 
 ---
 
-## Autores
-* Chavez Gutierrez Geraldine
+## Autor
 * Rojas Arreguin Jesus
 ---
 ## Capturas de pantalla 
