@@ -311,6 +311,18 @@ async function _cargarHistoriaModal(discoId, esAdmin, storyMode) {
     const editBlock      = document.getElementById('detalle-historia-edit');
     const textarea       = document.getElementById('detalle-historia-textarea');
 
+    // Si no viene de Novedades y no es admin, ocultar de inmediato sin esperar el fetch
+    if (!storyMode && !esAdmin) {
+        storyContainer.style.display = 'none';
+        return;
+    }
+
+    // Si no viene de Novedades y no es admin, ocultar de inmediato sin esperar el fetch
+    if (!storyMode && !esAdmin) {
+        storyContainer.style.display = 'none';
+        return;
+    }
+
     storyTexto.textContent = 'Cargando…';
     storyContainer.style.display = 'block';
 
@@ -325,7 +337,8 @@ async function _cargarHistoriaModal(discoId, esAdmin, storyMode) {
         historiaTexto = '';
     }
 
-   if (historiaTexto && (storyMode || esAdmin)) {
+    // Solo mostrar historia si viene de la sección Novedades (storyMode) o es admin
+    if (historiaTexto && (storyMode || esAdmin)) {
         storyTexto.textContent = historiaTexto;
         storyTexto.style.display = 'block';
     } else if (storyMode) {
