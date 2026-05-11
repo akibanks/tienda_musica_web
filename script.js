@@ -1080,6 +1080,16 @@ function abrirCheckoutDesdeCarrito() {
 let _datosEnvio = null; // Se guarda al confirmar el formulario
 
 function abrirModalEnvio(disco) {
+    // Redirigir a login si no hay sesión activa
+    if (!localStorage.getItem('usuarioLogueado')) {
+        mostrarToast('Debes iniciar sesión para comprar.', 'warning');
+        setTimeout(() => {
+            const base = window.location.pathname.replace('/index.html', '');
+            window.location.href = base + '/login.html';
+        }, 1200);
+        return;
+    }
+
     // Guardar el disco/carrito que se quiere comprar en _discoPagoActivo
     _discoPagoActivo = disco;
 
@@ -1201,6 +1211,8 @@ function manejarAuth() {
         localStorage.removeItem('usuarioLogueado');
         localStorage.removeItem('esAdmin');
         localStorage.removeItem('vv_token');
+        localStorage.removeItem('vv_carrito');
+        carrito = [];
         window.location.reload();
     } else {
         const base = window.location.pathname.replace('/index.html', '');
