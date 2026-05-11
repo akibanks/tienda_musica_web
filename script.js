@@ -44,6 +44,7 @@ async function cargarDiscos() {
         renderizarDiscos(todosLosDiscos.slice(0, LIMITE_CATALOGO), todosLosDiscos);
         renderizarCarrusel(todosLosDiscos);
         renderizarNovedades(todosLosDiscos);
+        renderizarGeneros(todosLosDiscos);
     } catch (error) {
         console.error("Error al cargar discos:", error);
         contenedor.innerHTML = `
@@ -1213,7 +1214,7 @@ if (formEditar) {
  
 // ── 13. ELIMINAR DISCO ────────────────────────────
 async function eliminarDisco(id, titulo) {
-    mostrarConfirm(`¿Borrar <strong>"${titulo}"</strong>?<br>Esta acción no se puede deshacer.`, async () => {
+    mostrarConfirm(`¿Borrar "${titulo}"?\nEsta acción no se puede deshacer.`, async () => {
         try {
             const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}`, {
                 method:  'DELETE',
@@ -1279,8 +1280,6 @@ function scrollToGeneros(e) {
     e.preventDefault();
     const section = document.getElementById('section-generos');
     if (!section) return;
-    section.style.display = '';
-    renderizarGeneros(todosLosDiscos);
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 

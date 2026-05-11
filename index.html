@@ -133,7 +133,7 @@
   </main>
 
   <!-- ═══ SECCIÓN GÉNEROS ════════════════════════════════ -->
-  <section id="section-generos" aria-label="Géneros musicales" style="display:none;">
+  <section id="section-generos" aria-label="Géneros musicales">
     <div class="generos-header">
       <div>
         <span class="generos-eyebrow">Explorar</span>
@@ -141,9 +141,7 @@
         <p class="generos-sub">Filtra el catálogo por estilo.</p>
       </div>
     </div>
-    <!-- Botones de filtro de géneros -->
     <div class="generos-filtros" id="generos-filtros"></div>
-    <!-- Grid de discos filtrados -->
     <div id="generos-grid" class="generos-grid"></div>
   </section>
 
@@ -321,7 +319,9 @@
         <h2 class="modal-detalle__titulo" id="detalle-titulo">—</h2>
         <p class="modal-detalle__artista" id="detalle-artista">—</p>
         <!-- Género del disco -->
-        <span class="modal-detalle__genero" id="detalle-genero" style="display:none;"></span>
+        <div style="text-align:center; margin-bottom:18px;">
+          <span class="modal-detalle__genero" id="detalle-genero" style="display:none; margin-bottom:0;"></span>
+        </div>
 
         <!-- Historia / descripción del disco -->
         <div class="modal-detalle__story" id="detalle-story-container" style="display:none;">
