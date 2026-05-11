@@ -60,7 +60,6 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
 
         const data = await respuesta.json();
 
-        
         if (respuesta.ok) {
             // Leer los valores ANTES de resetear el formulario
             const historiaEl  = document.getElementById('historia_cuerpo');
@@ -74,7 +73,8 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
             // Guardar historia si se escribió algo
             if (historiaTxt && data.id) {
                 await guardarHistoria(data.id, resumenTxt, historiaTxt);
-            }else {
+            }
+        } else {
             mostrarMensaje(mensaje, `❌ ${data.error || 'Error al guardar el disco.'}`, false);
         }
     } catch (error) {
