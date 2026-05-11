@@ -325,7 +325,7 @@ async function _cargarHistoriaModal(discoId, esAdmin, storyMode) {
         historiaTexto = '';
     }
 
-    if (historiaTexto) {
+   if (historiaTexto && (storyMode || esAdmin)) {
         storyTexto.textContent = historiaTexto;
         storyTexto.style.display = 'block';
     } else if (storyMode) {
