@@ -60,17 +60,21 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
 
         const data = await respuesta.json();
 
+        
         if (respuesta.ok) {
+            // Leer los valores ANTES de resetear el formulario
+            const historiaEl  = document.getElementById('historia_cuerpo');
+            const resumenEl   = document.getElementById('historia_resumen');
+            const historiaTxt = historiaEl?.value.trim();
+            const resumenTxt  = resumenEl?.value.trim();
+
             mostrarMensaje(mensaje, `✅ "${data.titulo}" agregado exitosamente.`, true);
             document.getElementById('form-disco').reset();
 
-            // Si el disco tiene historia, guardarla también
-            const historiaEl = document.getElementById('historia_cuerpo');
-            const resumenEl  = document.getElementById('historia_resumen');
-            if (historiaEl?.value.trim() && data.id) {
-                await guardarHistoria(data.id, resumenEl?.value.trim(), historiaEl.value.trim());
-            }
-        } else {
+            // Guardar historia si se escribió algo
+            if (historiaTxt && data.id) {
+                await guardarHistoria(data.id, resumenTxt, historiaTxt);
+            }else {
             mostrarMensaje(mensaje, `❌ ${data.error || 'Error al guardar el disco.'}`, false);
         }
     } catch (error) {
