@@ -1113,6 +1113,22 @@ button, .btn-login {
   color: var(--text-muted);
 }
 
+.novedad-card__genero-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255,107,107,0.18);
+  border: 1px solid rgba(255,107,107,0.4);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ff6b6b;
+  backdrop-filter: blur(4px);
+}
+
 .novedad-card__has-story {
   position: absolute;
   top: 10px;
@@ -1180,6 +1196,102 @@ button, .btn-login {
   #section-novedades { padding: 48px 20px 60px; }
   .novedades-titulo { font-size: 1.8rem; }
   .novedades-header__deco { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SECCIÓN GÉNEROS
+   ══════════════════════════════════════════════════════════ */
+#section-generos {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 72px 32px 80px;
+}
+
+.generos-header {
+  margin-bottom: 40px;
+}
+
+.generos-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ff6b6b;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.generos-titulo {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.generos-titulo em {
+  font-style: italic;
+  color: #ff6b6b;
+}
+
+.generos-sub {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Botones de filtro */
+.generos-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.genero-btn {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 24px;
+  color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.genero-btn:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  background: rgba(255,107,107,0.08);
+}
+
+.genero-btn--active {
+  background: rgba(255,107,107,0.15);
+  border-color: rgba(255,107,107,0.5);
+  color: #ff6b6b;
+}
+
+/* Grid de discos de géneros — mismo layout que el catálogo */
+.generos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.generos-empty {
+  grid-column: 1/-1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 48px 0;
+}
+
+@media (max-width: 640px) {
+  #section-generos { padding: 48px 20px 60px; }
+  .generos-titulo  { font-size: 1.8rem; }
 }
 
 .site-footer {
@@ -1617,15 +1729,15 @@ width: 100%; /* Se adaptará al ancho que le deje el padding del padre */
 /* ── Género del disco ── */
 .modal-detalle__genero {
   display: inline-block;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.4);
   border-radius: 20px;
-  padding: 3px 12px;
+  padding: 2px 10px;
   font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #ff6b6b;
   margin-bottom: 18px;
 }
 

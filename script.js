@@ -1274,6 +1274,102 @@ function renderizarNovedades(lista) {
     }).join('');
 }
 
+// Smooth-scroll a la sección géneros desde el menú
+function scrollToGeneros(e) {
+    e.preventDefault();
+    const section = document.getElementById('section-generos');
+    if (!section) return;
+    section.style.display = '';
+    renderizarGeneros(todosLosDiscos);
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Extrae géneros únicos y renderiza los botones + grid inicial
+function renderizarGeneros(lista) {
+    const filtrosEl = document.getElementById('generos-filtros');
+    const gridEl    = document.getElementById('generos-grid');
+    if (!filtrosEl || !gridEl) return;
+
+    // Géneros únicos (ignorar discos sin género)
+    const generos = [...new Set(
+        lista
+            .map(d => d.genero)
+            .filter(Boolean)
+            .map(g => g.trim())
+    )].sort();
+
+    if (generos.length === 0) {
+        filtrosEl.innerHTML = '';
+        gridEl.innerHTML = `<p class="generos-empty">Ningún disco tiene género asignado aún.</p>`;
+        return;
+    }
+
+    // Botones de filtro — primero "Todos"
+    filtrosEl.innerHTML = `
+        <button class="genero-btn genero-btn--active" data-genero="__todos__" onclick="filtrarPorGenero(this, '__todos__')">
+            Todos (${lista.filter(d => d.genero).length})
+        </button>
+        ${generos.map(g => {
+            const count = lista.filter(d => d.genero && d.genero.trim() === g).length;
+            return `<button class="genero-btn" data-genero="${g}" onclick="filtrarPorGenero(this, '${g.replace(/'/g, "\\'")}')">
+                ${g} <span style="opacity:.55;">(${count})</span>
+            </button>`;
+        }).join('')}`;
+
+    // Mostrar todos al inicio
+    _renderizarGridGeneros(lista.filter(d => d.genero));
+}
+
+// Filtra y re-renderiza el grid al hacer clic en un botón de género
+function filtrarPorGenero(btn, genero) {
+    // Actualizar estado activo de botones
+    document.querySelectorAll('.genero-btn').forEach(b => b.classList.remove('genero-btn--active'));
+    btn.classList.add('genero-btn--active');
+
+    const filtrados = genero === '__todos__'
+        ? todosLosDiscos.filter(d => d.genero)
+        : todosLosDiscos.filter(d => d.genero && d.genero.trim() === genero);
+
+    _renderizarGridGeneros(filtrados);
+}
+
+// Renderiza las cards de discos dentro del grid de géneros
+function _renderizarGridGeneros(lista) {
+    const gridEl = document.getElementById('generos-grid');
+    if (!gridEl) return;
+
+    if (lista.length === 0) {
+        gridEl.innerHTML = `<p class="generos-empty">No hay discos en este género.</p>`;
+        return;
+    }
+
+    gridEl.innerHTML = lista.map(disco => {
+        const img    = disco.url_img || disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
+        const genero = disco.genero ? `<span class="novedad-card__genero-tag">${disco.genero}</span>` : '';
+        return `
+        <article class="novedad-card"
+            role="button" tabindex="0"
+            aria-label="${disco.titulo} por ${disco.artista}"
+            onclick="abrirModalDetalle({id:${disco.id}})"
+            onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalDetalle({id:${disco.id}})">
+            <div class="novedad-card__img-wrap">
+                <img src="${img}" alt="${disco.titulo}" loading="lazy">
+                <div class="novedad-card__story-hint">
+                    <span>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                        Ver disco
+                    </span>
+                </div>
+                ${genero}
+            </div>
+            <div class="novedad-card__info">
+                <div class="novedad-card__titulo">${disco.titulo}</div>
+                <div class="novedad-card__artista">${disco.artista}</div>
+            </div>
+        </article>`;
+    }).join('');
+}
+
 // Smooth-scroll a la sección novedades desde el menú
 function scrollToNovedades(e) {
     e.preventDefault();

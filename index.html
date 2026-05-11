@@ -39,7 +39,7 @@
       <nav class="header-nav" aria-label="Navegación principal">
         <a href="#" class="nav-link nav-link--active">Catálogo</a>
         <a href="#section-novedades" class="nav-link" onclick="scrollToNovedades(event)">Novedades</a>
-        <a href="#" class="nav-link">Géneros</a>
+        <a href="#section-generos" class="nav-link" onclick="scrollToGeneros(event)">Géneros</a>
       </nav>
 
       <div id="auth-section" class="auth-section">
@@ -131,6 +131,21 @@
       <div class="disco-card disco-card--skeleton" aria-hidden="true"></div>
     </section>
   </main>
+
+  <!-- ═══ SECCIÓN GÉNEROS ════════════════════════════════ -->
+  <section id="section-generos" aria-label="Géneros musicales" style="display:none;">
+    <div class="generos-header">
+      <div>
+        <span class="generos-eyebrow">Explorar</span>
+        <h2 class="generos-titulo">Géneros <em>musicales</em></h2>
+        <p class="generos-sub">Filtra el catálogo por estilo.</p>
+      </div>
+    </div>
+    <!-- Botones de filtro de géneros -->
+    <div class="generos-filtros" id="generos-filtros"></div>
+    <!-- Grid de discos filtrados -->
+    <div id="generos-grid" class="generos-grid"></div>
+  </section>
 
   <!-- ═══ SECCIÓN NOVEDADES & STORYTELLING ════════════════ -->
   <section id="section-novedades" aria-label="Novedades y curiosidades">
