@@ -511,7 +511,7 @@ async function cargarVideoUrl() {
         // Endpoint dedicado para videos (PUT /discos/:id/video)
         const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}/video`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ youtube_id: videoId, nombre_usuario })
         });
 
@@ -546,7 +546,7 @@ async function limpiarVideoModal() {
         // Endpoint dedicado para eliminar el video
         const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}/video`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ nombre_usuario })
         });
         if (!res.ok) {
@@ -584,6 +584,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         cerrarModalDetalle();
         cerrarModal();
+        cerrarModalEnvio();
     }
 });
  
@@ -757,13 +758,14 @@ function abrirCarrito() {
 // ── 9. COMPRA ─────────────────────────────────────
 function comprarDesdeModal() {
     if (!discoActivo) return;
-    abrirModalPago(discoActivo);
+    abrirModalEnvio(discoActivo);
 }
 
 // ── Init listeners del input de video ─────────────
 // BUG 2 FIX: Solo se ejecuta una vez; se elimina el IIFE duplicado
 document.addEventListener('DOMContentLoaded', () => {
     _bindPagoInputs(); // BUG 2 FIX: único punto de inicialización del formulario de pago
+    _bindEnvioForm();  // inicialización del formulario de envío
     const urlInput = document.getElementById('detalle-video-url');
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
@@ -944,7 +946,7 @@ async function procesarPago() {
             const res = await fetch('https://api-tienda-vinilos.onrender.com/checkout', {
                 method:  'POST',
                 headers: authHeaders(),
-                body:    JSON.stringify({ items }),
+                body:    JSON.stringify({ items, envio: _datosEnvio }),
             });
             const data = await res.json();
             if (res.ok) {
@@ -997,7 +999,7 @@ async function procesarPago() {
     try {
         const respuesta = await fetch(
             `https://api-tienda-vinilos.onrender.com/discos/${_discoPagoActivo.id}/compra`,
-            { method: 'POST', headers: authHeaders(), body: JSON.stringify({}) }
+            { method: 'POST', headers: authHeaders(), body: JSON.stringify({ envio: _datosEnvio }) }
         );
         const data = await respuesta.json();
         if (respuesta.ok) {
@@ -1064,18 +1066,101 @@ function abrirCheckoutDesdeCarrito() {
     submitBtn.classList.remove('loading');
     submitBtn.disabled = false;
 
-    // Cerrar el panel del carrito antes de abrir el modal
+    // Cerrar el panel del carrito antes de abrir el modal de envío
     const cartPanel = document.getElementById('cart-panel');
     const cartOverlay = document.getElementById('cart-overlay');
     if (cartPanel) cartPanel.classList.remove('open');
     if (cartOverlay) cartOverlay.classList.remove('open');
 
-    document.getElementById('modal-pago').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => document.getElementById('pago-nombre').focus(), 100);
+    abrirModalEnvio(_discoPagoActivo);
 }
 
  
+// ── 9b. MODAL DE ENVÍO ────────────────────────────
+let _datosEnvio = null; // Se guarda al confirmar el formulario
+
+function abrirModalEnvio(disco) {
+    // Guardar el disco/carrito que se quiere comprar en _discoPagoActivo
+    _discoPagoActivo = disco;
+
+    // Actualizar subtítulo
+    const titulo = disco._esCarrito ? disco.titulo : `${disco.titulo}`;
+    const precio = Number(disco.precio).toFixed(2);
+    document.getElementById('envio-subtitulo').textContent = `${titulo} — $${precio}`;
+
+    // Pre-rellenar si ya se llenaron los datos antes
+    if (_datosEnvio) {
+        document.getElementById('envio-nombre').value     = _datosEnvio.nombre_receptor || '';
+        document.getElementById('envio-calle').value      = _datosEnvio.calle           || '';
+        document.getElementById('envio-num-ext').value    = _datosEnvio.numero_ext      || '';
+        document.getElementById('envio-num-int').value    = _datosEnvio.numero_int      || '';
+        document.getElementById('envio-colonia').value    = _datosEnvio.colonia         || '';
+        document.getElementById('envio-cp').value         = _datosEnvio.codigo_postal   || '';
+        document.getElementById('envio-ciudad').value     = _datosEnvio.ciudad          || '';
+        document.getElementById('envio-estado').value     = _datosEnvio.estado          || '';
+        document.getElementById('envio-referencias').value = _datosEnvio.referencias    || '';
+    }
+
+    const submitBtn = document.getElementById('envio-submit-btn');
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+
+    document.getElementById('modal-envio').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('envio-nombre').focus(), 100);
+}
+
+function cerrarModalEnvio() {
+    document.getElementById('modal-envio').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Bind del form de envío — se llama desde DOMContentLoaded
+function _bindEnvioForm() {
+    const formEnvio = document.getElementById('form-envio');
+    if (!formEnvio) return;
+
+    formEnvio.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const nombre    = document.getElementById('envio-nombre').value.trim();
+        const calle     = document.getElementById('envio-calle').value.trim();
+        const numExt    = document.getElementById('envio-num-ext').value.trim();
+        const numInt    = document.getElementById('envio-num-int').value.trim();
+        const colonia   = document.getElementById('envio-colonia').value.trim();
+        const cp        = document.getElementById('envio-cp').value.trim();
+        const ciudad    = document.getElementById('envio-ciudad').value.trim();
+        const estado    = document.getElementById('envio-estado').value.trim();
+        const refs      = document.getElementById('envio-referencias').value.trim();
+
+        // Validaciones básicas
+        if (!nombre)  { mostrarToast('Ingresa el nombre del receptor.', 'error'); return; }
+        if (!calle)   { mostrarToast('Ingresa la calle.', 'error'); return; }
+        if (!numExt)  { mostrarToast('Ingresa el número exterior.', 'error'); return; }
+        if (!colonia) { mostrarToast('Ingresa la colonia.', 'error'); return; }
+        if (!cp)      { mostrarToast('Ingresa el código postal.', 'error'); return; }
+        if (!ciudad)  { mostrarToast('Ingresa la ciudad.', 'error'); return; }
+        if (!estado)  { mostrarToast('Ingresa el estado.', 'error'); return; }
+
+        // Guardar datos de envío
+        _datosEnvio = {
+            nombre_receptor: nombre,
+            calle,
+            numero_ext: numExt,
+            numero_int: numInt || null,
+            colonia,
+            codigo_postal: cp,
+            ciudad,
+            estado,
+            referencias: refs || null,
+        };
+
+        // Cerrar modal de envío y abrir modal de pago
+        cerrarModalEnvio();
+        abrirModalPago(_discoPagoActivo);
+    });
+}
+
 // ── 10. INTERFAZ DE USUARIO ───────────────────────
 function actualizarInterfazUsuario() {
     const usuario = localStorage.getItem('usuarioLogueado');
