@@ -178,6 +178,22 @@
           <input type="url" id="imagen_url" placeholder="https://…">
         </div>
 
+        <div class="form-row">
+          <div class="input-group">
+            <label for="anio">Año <span style="color:var(--text-muted); font-weight:400;">(opcional)</span></label>
+            <input type="number" id="anio" min="1900" max="2099" placeholder="Ej: 1979">
+          </div>
+          <div class="input-group">
+            <label for="genero">Género <span style="color:var(--text-muted); font-weight:400;">(opcional)</span></label>
+            <input type="text" id="genero" placeholder="Ej: Rock, Jazz, Pop…">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="historia_cuerpo">Historia del álbum <span style="color:var(--text-muted); font-weight:400;">(opcional)</span></label>
+          <textarea id="historia_cuerpo" rows="5" placeholder="Curiosidades, contexto histórico, anécdotas…" style="resize:vertical; min-height:90px; background:var(--bg-raised); border:1px solid var(--border-dim); border-radius:var(--r-sm); color:var(--text-primary); padding:12px 14px; font-family:inherit; font-size:0.875rem; width:100%; outline:none;"></textarea>
+        </div>
+
         <button type="submit">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
           Guardar en Catálogo

@@ -212,6 +212,20 @@
           <label for="edit-imagen">URL de la Portada</label>
           <input type="url" id="edit-imagen" placeholder="https://…">
         </div>
+        <div class="form-grid form-grid--two">
+          <div class="input-group">
+            <label for="edit-anio">Año <span class="label-tag">opcional</span></label>
+            <input type="number" id="edit-anio" min="1900" max="2099" placeholder="Ej: 1979">
+          </div>
+          <div class="input-group">
+            <label for="edit-genero">Género <span class="label-tag">opcional</span></label>
+            <input type="text" id="edit-genero" placeholder="Ej: Rock, Jazz, Pop…">
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="edit-historia">Historia del álbum <span class="label-tag">opcional</span></label>
+          <textarea id="edit-historia" rows="5" placeholder="Escribe curiosidades, contexto histórico o la historia detrás de este álbum…" style="resize:vertical; min-height:100px;"></textarea>
+        </div>
         <div class="modal-botones">
           <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
           <button type="submit" class="btn-save">
@@ -291,10 +305,20 @@
         <span class="modal-detalle__tag">Álbum de Vinilo · 12"</span>
         <h2 class="modal-detalle__titulo" id="detalle-titulo">—</h2>
         <p class="modal-detalle__artista" id="detalle-artista">—</p>
+        <!-- Género del disco -->
+        <span class="modal-detalle__genero" id="detalle-genero" style="display:none;"></span>
 
-        <!-- Historia / descripción del disco (visible solo si hay texto) -->
+        <!-- Historia / descripción del disco -->
         <div class="modal-detalle__story" id="detalle-story-container" style="display:none;">
           <blockquote id="detalle-story-texto"></blockquote>
+          <!-- Textarea de edición (solo visible para admin) -->
+          <div class="detalle-historia-edit" id="detalle-historia-edit" style="display:none;">
+            <textarea id="detalle-historia-textarea" rows="6" placeholder="Escribe la historia o curiosidades de este álbum…"></textarea>
+            <button class="detalle-historia-save" onclick="guardarHistoriaDesdeModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Guardar historia
+            </button>
+          </div>
         </div>
 
         <div class="modal-detalle__meta" id="detalle-meta-bloque">

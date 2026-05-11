@@ -220,20 +220,22 @@ function abrirModalDetalle(disco) {
     const content = document.querySelector('.modal-detalle__content');
     const stock   = Number(discoFresh.stock);
     const imgUrl  = discoFresh.url_img || discoFresh.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+    const esAdmin = localStorage.getItem('esAdmin') === 'true';
 
-    // Quitar modo storytelling si venía de novedades
     content.classList.remove('modal-detalle__content--story');
 
     _rellenarModalBase(discoFresh, imgUrl, stock);
 
-    // Mostrar precio y acciones; ocultar historia
-    document.getElementById('detalle-meta-bloque').style.display    = '';
-    document.getElementById('detalle-acciones-bloque').style.display = '';
-    document.getElementById('detalle-story-container').style.display = 'none';
+    // Mostrar precio y acciones
+    document.getElementById('detalle-meta-bloque').style.display     = '';
+    document.getElementById('detalle-acciones-bloque').style.display  = '';
 
     // Botones habilitados según stock
     document.getElementById('detalle-btn-carrito').disabled = stock === 0;
     document.getElementById('detalle-btn-comprar').disabled = stock === 0;
+
+    // Cargar historia desde la API (visible para todos; editable solo para admin)
+    _cargarHistoriaModal(discoFresh.id, esAdmin, false);
 
     _cargarVideo(discoFresh);
 
@@ -251,34 +253,16 @@ async function abrirModalStorytelling(disco) {
     const content = document.querySelector('.modal-detalle__content');
     const stock   = Number(discoFresh.stock);
     const imgUrl  = discoFresh.url_img || discoFresh.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=600';
+    const esAdmin = localStorage.getItem('esAdmin') === 'true';
 
-    // Activar modo storytelling
     content.classList.add('modal-detalle__content--story');
 
     _rellenarModalBase(discoFresh, imgUrl, stock);
 
-    // Ocultar precio y botones de compra
     document.getElementById('detalle-meta-bloque').style.display    = 'none';
     document.getElementById('detalle-acciones-bloque').style.display = 'none';
 
-    // Mostrar historia (fetch desde la API)
-    const storyContainer = document.getElementById('detalle-story-container');
-    const storyTexto     = document.getElementById('detalle-story-texto');
-
-    storyTexto.textContent = 'Cargando historia…';
-    storyContainer.style.display = 'block';
-
-    try {
-        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoFresh.id}/historia`);
-        if (res.ok) {
-            const data = await res.json();
-            storyTexto.textContent = data.cuerpo || data.resumen || '✍️ La historia de este álbum aún no ha sido escrita.';
-        } else {
-            storyTexto.textContent = '✍️ La historia de este álbum aún no ha sido escrita.';
-        }
-    } catch (e) {
-        storyTexto.textContent = '✍️ No se pudo cargar la historia. Revisa tu conexión.';
-    }
+    _cargarHistoriaModal(discoFresh.id, esAdmin, true);
 
     _cargarVideo(discoFresh);
 
@@ -295,6 +279,17 @@ function _rellenarModalBase(disco, imgUrl, stock) {
     document.getElementById('detalle-precio').textContent  = `$${Number(disco.precio).toFixed(2)}`;
     document.getElementById('detalle-stock').textContent   = `${stock} unidades`;
 
+    // Género
+    const generoEl = document.getElementById('detalle-genero');
+    if (generoEl) {
+        if (disco.genero) {
+            generoEl.textContent = disco.genero;
+            generoEl.style.display = 'inline-block';
+        } else {
+            generoEl.style.display = 'none';
+        }
+    }
+
     // Fondo de la columna izquierda
     const coverEl = document.querySelector('.modal-detalle__cover');
     if (coverEl) coverEl.style.removeProperty('--cover-bg-url');
@@ -306,7 +301,80 @@ function _rellenarModalBase(disco, imgUrl, stock) {
     renderizarRecomendados(disco.id);
 }
 
-// Muestra 3 discos aleatorios del catálogo (excluyendo el disco actual)
+// Carga la historia desde la API y la muestra en el modal.
+// Si esAdmin=true muestra el textarea de edición.
+// Si storyMode=true muestra el bloque siempre (modo novedades).
+async function _cargarHistoriaModal(discoId, esAdmin, storyMode) {
+    const storyContainer = document.getElementById('detalle-story-container');
+    const storyTexto     = document.getElementById('detalle-story-texto');
+    const editBlock      = document.getElementById('detalle-historia-edit');
+    const textarea       = document.getElementById('detalle-historia-textarea');
+
+    storyTexto.textContent = 'Cargando…';
+    storyContainer.style.display = 'block';
+
+    let historiaTexto = '';
+    try {
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoId}/historia`);
+        if (res.ok) {
+            const data = await res.json();
+            historiaTexto = data.cuerpo || data.resumen || '';
+        }
+    } catch (e) {
+        historiaTexto = '';
+    }
+
+    if (historiaTexto) {
+        storyTexto.textContent = historiaTexto;
+        storyTexto.style.display = 'block';
+    } else if (storyMode) {
+        storyTexto.textContent = '✍️ La historia de este álbum aún no ha sido escrita.';
+        storyTexto.style.display = 'block';
+    } else {
+        // En modo compra sin historia y sin admin: ocultar bloque
+        if (!esAdmin) {
+            storyContainer.style.display = 'none';
+            return;
+        }
+        storyTexto.style.display = 'none';
+    }
+
+    // Mostrar textarea de edición solo para admin
+    if (editBlock) {
+        editBlock.style.display = esAdmin ? 'block' : 'none';
+        if (textarea) textarea.value = historiaTexto;
+    }
+}
+
+// Guarda la historia escrita en el textarea al servidor
+async function guardarHistoriaDesdeModal() {
+    if (!discoActivo) return;
+    const textarea = document.getElementById('detalle-historia-textarea');
+    const cuerpo   = textarea ? textarea.value.trim() : '';
+    const btn      = document.querySelector('.detalle-historia-save');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+    try {
+        const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${discoActivo.id}/historia`, {
+            method:  'PUT',
+            headers: authHeaders(),
+            body:    JSON.stringify({ cuerpo }),
+        });
+        if (res.ok) {
+            document.getElementById('detalle-story-texto').textContent = cuerpo || '✍️ La historia de este álbum aún no ha sido escrita.';
+            document.getElementById('detalle-story-texto').style.display = 'block';
+            mostrarToast('Historia guardada correctamente.', 'success');
+        } else {
+            const d = await res.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo guardar'), 'error');
+        }
+    } catch (e) {
+        mostrarToast('Error de conexión.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Guardar historia'; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Guardar historia'; }
+    }
+}
 function renderizarRecomendados(discoActualId) {
     const lista = document.getElementById('recomendados-lista');
     if (!lista || todosLosDiscos.length === 0) return;
@@ -1055,18 +1123,36 @@ function manejarAuth() {
 }
  
 // ── 11. MODAL EDICIÓN (Admin) ─────────────────────
-function abrirModalEditar(disco) {
+async function abrirModalEditar(disco) {
     document.getElementById('edit-id').value      = disco.id;
     document.getElementById('edit-titulo').value  = disco.titulo;
     document.getElementById('edit-artista').value = disco.artista || '';
     document.getElementById('edit-precio').value  = disco.precio;
     document.getElementById('edit-stock').value   = disco.stock;
     document.getElementById('edit-imagen').value  = disco.url_img || disco.imagen_url || '';
-    // Campos nuevos del esquema
-    const editAnio   = document.getElementById('edit-anio');
-    const editGenero = document.getElementById('edit-genero');
+
+    const editAnio     = document.getElementById('edit-anio');
+    const editGenero   = document.getElementById('edit-genero');
+    const editHistoria = document.getElementById('edit-historia');
+
     if (editAnio)   editAnio.value   = disco.anio   || '';
     if (editGenero) editGenero.value = disco.genero || '';
+
+    // Cargar historia actual desde la API
+    if (editHistoria) {
+        editHistoria.value = 'Cargando…';
+        try {
+            const res = await fetch(`https://api-tienda-vinilos.onrender.com/discos/${disco.id}/historia`);
+            if (res.ok) {
+                const data = await res.json();
+                editHistoria.value = data.cuerpo || data.resumen || '';
+            } else {
+                editHistoria.value = '';
+            }
+        } catch (e) {
+            editHistoria.value = '';
+        }
+    }
 
     document.getElementById('modal-edicion').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -1092,7 +1178,7 @@ if (formEditar) {
             imagen_url: document.getElementById('edit-imagen').value,
             url_img:    document.getElementById('edit-imagen').value,
             anio:       parseInt(document.getElementById('edit-anio')?.value) || null,
-            genero:     document.getElementById('edit-genero')?.value || null,
+            genero:     document.getElementById('edit-genero')?.value.trim() || null,
         };
 
         try {
@@ -1102,6 +1188,15 @@ if (formEditar) {
                 body:    JSON.stringify(datosActualizados),
             });
             if (res.ok) {
+                // Guardar historia si se escribió algo
+                const historiaVal = document.getElementById('edit-historia')?.value.trim();
+                if (historiaVal !== undefined) {
+                    await fetch(`https://api-tienda-vinilos.onrender.com/discos/${id}/historia`, {
+                        method:  'PUT',
+                        headers: authHeaders(),
+                        body:    JSON.stringify({ cuerpo: historiaVal }),
+                    });
+                }
                 mostrarToast('Disco actualizado con éxito.', 'success');
                 cerrarModal();
                 cargarDiscos();
