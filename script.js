@@ -85,9 +85,9 @@ function renderizarDiscos(lista, listaTodo) {
             adminBtns = `
                 <div class="acciones" style="padding: 0 14px 14px;" onclick="event.stopPropagation()">
                     <button class="btn-sm" style="background:var(--bg-hover);border:1px solid var(--border-dim);color:var(--text-secondary);flex:1;justify-content:center;"
-                        onclick="abrirModalEditar(${discoJSON})">⚙️ Editar</button>
+                        onclick="abrirModalEditar(${discoJSON})">Editar</button>
                     <button class="btn-sm btn-danger"
-                        onclick="eliminarDisco(${disco.id}, '${disco.titulo.replace(/'/g,"\\'")}')">🗑️ Borrar</button>
+                        onclick="eliminarDisco(${disco.id}, '${disco.titulo.replace(/'/g,"\\'")}')">Borrar</button>
                 </div>`;
         }
  
@@ -342,7 +342,7 @@ async function _cargarHistoriaModal(discoId, esAdmin, storyMode) {
         storyTexto.textContent = historiaTexto;
         storyTexto.style.display = 'block';
     } else if (storyMode) {
-        storyTexto.textContent = '✍️ La historia de este álbum aún no ha sido escrita.';
+        storyTexto.textContent = 'La historia de este álbum aún no ha sido escrita.';
         storyTexto.style.display = 'block';
     } else {
         // En modo compra sin historia y sin admin: ocultar bloque
@@ -376,7 +376,7 @@ async function guardarHistoriaDesdeModal() {
             body:    JSON.stringify({ cuerpo }),
         });
         if (res.ok) {
-            document.getElementById('detalle-story-texto').textContent = cuerpo || '✍️ La historia de este álbum aún no ha sido escrita.';
+            document.getElementById('detalle-story-texto').textContent = cuerpo || 'La historia de este álbum aún no ha sido escrita.';
             document.getElementById('detalle-story-texto').style.display = 'block';
             mostrarToast('Historia guardada correctamente.', 'success');
         } else {
@@ -539,7 +539,7 @@ async function cargarVideoUrl() {
         const idx = todosLosDiscos.findIndex(d => d.id === discoActivo.id);
         if (idx !== -1) todosLosDiscos[idx].video_url = videoId;
 
-        mostrarToast('✅ Video guardado para este álbum.', 'success');
+        mostrarToast('Video guardado para este álbum.', 'success');
         _mostrarIframeVideo(
             `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`,
             true
@@ -698,7 +698,7 @@ async function agregarAlCarritoDesdeModal() {
 
     if (valido === null) {
         // Error de red: advertir pero permitir continuar
-        mostrarConfirm(`⚠️ ${error}\n¿Deseas añadirlo al carrito de todas formas?`,
+        mostrarConfirm(`${error}\n¿Deseas añadirlo al carrito de todas formas?`,
             () => {
                 const discoParaCarrito = discoActualizado || discoActivo;
                 agregarAlCarrito(discoParaCarrito);
@@ -1016,7 +1016,7 @@ async function procesarPago() {
         );
         const data = await respuesta.json();
         if (respuesta.ok) {
-            mostrarToast(`✨ ¡Compra exitosa! "${_discoPagoActivo.titulo}" es tuyo.`, 'success');
+            mostrarToast(`¡Compra exitosa! "${_discoPagoActivo.titulo}" es tuyo.`, 'success');
             cerrarModalPago();
             cerrarModalDetalle();
             cargarDiscos();
