@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = await respuesta.json();
 
                 if (respuesta.ok) {
-                    mostrarExito(mensajeReg, '✅ ¡Cuenta creada! Ahora puedes iniciar sesión.');
+                    mostrarExito(mensajeReg, '¡Cuenta creada! Ahora puedes iniciar sesión.');
                     registroForm.reset();
                     setTimeout(() => cambiarVista('login'), 1500);
                 } else {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // ── Helpers de mensajes ───────────────────────────────────
 function mostrarError(el, texto) {
     if (!el) return;
-    el.innerText   = '❌ ' + texto;
+    el.innerText   = '' + texto;
     el.style.color = '#fca5a5';
 }
 
