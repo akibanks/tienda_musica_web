@@ -23,7 +23,7 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
     const mensaje = document.getElementById('mensaje-admin');
 
     if (!token) {
-        mostrarMensaje(mensaje, '❌ Debes estar logueado como admin.', false);
+        mostrarMensaje(mensaje, 'Debes estar logueado como admin.', false);
         return;
     }
 
@@ -40,11 +40,11 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
 
     // Validación básica
     if (!disco.titulo || !disco.artista) {
-        mostrarMensaje(mensaje, '❌ El título y el artista son obligatorios.', false);
+        mostrarMensaje(mensaje, 'El título y el artista son obligatorios.', false);
         return;
     }
     if (isNaN(disco.precio) || disco.precio < 0) {
-        mostrarMensaje(mensaje, '❌ El precio debe ser un número positivo.', false);
+        mostrarMensaje(mensaje, 'El precio debe ser un número positivo.', false);
         return;
     }
 
@@ -67,7 +67,7 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
             const historiaTxt = historiaEl?.value.trim();
             const resumenTxt  = resumenEl?.value.trim();
 
-            mostrarMensaje(mensaje, `✅ "${data.titulo}" agregado exitosamente.`, true);
+            mostrarMensaje(mensaje, `"${data.titulo}" agregado exitosamente.`, true);
             document.getElementById('form-disco').reset();
 
             // Guardar historia si se escribió algo
@@ -75,11 +75,11 @@ document.getElementById('form-disco').addEventListener('submit', async (e) => {
                 await guardarHistoria(data.id, resumenTxt, historiaTxt);
             }
         } else {
-            mostrarMensaje(mensaje, `❌ ${data.error || 'Error al guardar el disco.'}`, false);
+            mostrarMensaje(mensaje, `${data.error || 'Error al guardar el disco.'}`, false);
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarMensaje(mensaje, '❌ Error de conexión con el servidor.', false);
+        mostrarMensaje(mensaje, 'Error de conexión con el servidor.', false);
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Guardar en Catálogo'; }
     }
