@@ -20,6 +20,7 @@ La aplicación está alojada en **Render**.
 
 ## Autor
 * Rojas Arreguin Jesus
+* Chávez Gutiérrez Geraldine 
 ---
 
 
