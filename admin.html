@@ -209,6 +209,58 @@
 
 </div>
 
+      <!-- ── Importar desde Discogs ── -->
+      <div class="admin-card" style="margin-top: 32px;">
+        <div class="admin-card__header">
+          <span class="admin-card__eyebrow">Discogs</span>
+          <h2>Importar Disco</h2>
+          <p>Busca un álbum en Discogs e impórtalo automáticamente con video y historia.</p>
+        </div>
+
+        <!-- Buscador -->
+        <div class="input-group" style="margin-bottom: 16px;">
+          <label for="discogs-query">Buscar en Discogs</label>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="discogs-query" placeholder="Ej: Rumours Fleetwood Mac" style="flex:1;">
+            <button type="button" id="btn-discogs-buscar" style="white-space:nowrap; padding: 0 20px;">
+              Buscar
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados -->
+        <div id="discogs-resultados" style="display:none; margin-bottom: 20px;">
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Selecciona un disco para importar:</p>
+          <div id="discogs-lista" style="display:flex; flex-direction:column; gap:10px; max-height:400px; overflow-y:auto;"></div>
+        </div>
+
+        <!-- Formulario de importación -->
+        <div id="discogs-form-importar" style="display:none;">
+          <div style="background:var(--bg-raised); border:1px solid var(--border-subtle); border-radius:var(--r-sm); padding:16px; margin-bottom:16px; display:flex; gap:16px; align-items:center;">
+            <img id="discogs-preview-img" src="" alt="" style="width:70px; height:70px; object-fit:cover; border-radius:8px; display:none;">
+            <div>
+              <p id="discogs-preview-titulo" style="font-weight:600; margin-bottom:4px;"></p>
+              <p id="discogs-preview-info" style="font-size:0.8rem; color:var(--text-muted);"></p>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="discogs-precio">Precio <span class="label-tag">USD</span></label>
+              <input type="number" id="discogs-precio" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="input-group">
+              <label for="discogs-stock">Stock <span class="label-tag">uds</span></label>
+              <input type="number" id="discogs-stock" min="0" placeholder="10" value="10">
+            </div>
+          </div>
+          <button type="button" id="btn-discogs-importar" style="width:100%; justify-content:center; padding:14px; margin-top:8px;">
+            ⬇ Importar disco
+          </button>
+          <p id="mensaje-discogs" style="text-align:center; font-size:0.85rem; min-height:16px; margin-top:8px;"></p>
+        </div>
+      </div>
+
+
 <script src="admin.js"></script>
 </body>
 </html>
