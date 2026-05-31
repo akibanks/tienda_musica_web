@@ -188,74 +188,7 @@
     </div>
   </footer>
 
-  <!-- ═══ MODAL EDICIÓN (Admin) ════════════════════════ -->
-  <div id="modal-edicion" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display: none;">
-    <div class="modal-backdrop" onclick="cerrarModal()" aria-hidden="true"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-header-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
-        <div>
-          <h3 id="modal-title">Editar Disco</h3>
-          <p class="modal-subtitle">Actualiza los datos del álbum.</p>
-        </div>
-        <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <form id="form-editar" class="modal-form" novalidate>
-        <input type="hidden" id="edit-id">
-        <div class="form-grid form-grid--two">
-          <div class="input-group">
-            <label for="edit-titulo">Título del Álbum</label>
-            <input type="text" id="edit-titulo" placeholder="Ej: Dark Side of the Moon" required>
-          </div>
-          <div class="input-group">
-            <label for="edit-artista">Artista / Banda</label>
-            <input type="text" id="edit-artista" placeholder="Ej: Pink Floyd" required>
-          </div>
-        </div>
-        <div class="form-grid form-grid--two">
-          <div class="input-group">
-            <label for="edit-precio">Precio <span class="label-tag">USD</span></label>
-            <input type="number" id="edit-precio" step="0.01" min="0" placeholder="0.00" required>
-          </div>
-          <div class="input-group">
-            <label for="edit-stock">Stock <span class="label-tag">unidades</span></label>
-            <input type="number" id="edit-stock" min="0" placeholder="0" required>
-          </div>
-        </div>
-        <div class="input-group">
-          <label for="edit-imagen">URL de la Portada</label>
-          <input type="url" id="edit-imagen" placeholder="https://…">
-        </div>
-        <div class="form-grid form-grid--two">
-          <div class="input-group">
-            <label for="edit-anio">Año <span class="label-tag">opcional</span></label>
-            <input type="number" id="edit-anio" min="1900" max="2099" placeholder="Ej: 1979">
-          </div>
-          <div class="input-group">
-            <label for="edit-genero">Género <span class="label-tag">opcional</span></label>
-            <input type="text" id="edit-genero" placeholder="Ej: Rock, Jazz, Pop…">
-          </div>
-        </div>
-        <div class="input-group">
-          <label for="edit-historia">Historia del álbum <span class="label-tag">opcional</span></label>
-          <textarea id="edit-historia" rows="5" placeholder="Escribe curiosidades, contexto histórico o la historia detrás de este álbum…" style="resize:vertical; min-height:100px;"></textarea>
-        </div>
-        <div class="modal-botones">
-          <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-          <button type="submit" class="btn-save">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            Guardar Cambios
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ═══ MODAL DETALLE ════════════════════════════════ -->
+    <!-- ═══ MODAL DETALLE ════════════════════════════════ -->
   <div id="modal-detalle" role="dialog" aria-modal="true" aria-labelledby="detalle-titulo">
     <div class="modal-detalle__content">
 
@@ -275,26 +208,8 @@
             <span id="detalle-video-label-txt">Escucha el álbum</span>
           </div>
 
-          <!-- Estado: sin video — input para pegar URL -->
-          <div class="video-placeholder" id="detalle-video-placeholder">
-            <div class="video-placeholder__icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3 8 3"/><polygon points="10 12 16 14.5 10 17" fill="currentColor" stroke="none"/></svg>
-            </div>
-            <p class="video-placeholder__hint">Añade un video de YouTube a este álbum</p>
-            <div class="video-url-input-wrap">
-              <input
-                type="url"
-                id="detalle-video-url"
-                placeholder="https://youtube.com/watch?v=…"
-                autocomplete="off"
-                spellcheck="false"
-                aria-label="URL de YouTube"
-              >
-              <button class="video-url-btn" onclick="cargarVideoUrl()" aria-label="Añadir video">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Añadir video
-              </button>
-            </div>
+          <!-- Estado: sin video -->
+          <div class="video-placeholder" id="detalle-video-placeholder" style="display:none;">
           </div>
 
           <!-- Estado: con video — iframe de YouTube -->
@@ -309,11 +224,7 @@
             ></iframe>
           </div>
 
-          <!-- Botón para quitar el video cargado -->
-          <button class="video-clear-btn" id="detalle-video-clear" style="display:none;" onclick="limpiarVideoModal()">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Quitar video
-          </button>
+
 
         </div>
       </div>
@@ -331,24 +242,13 @@
         <!-- Historia / descripción del disco -->
         <div class="modal-detalle__story" id="detalle-story-container" style="display:none;">
           <blockquote id="detalle-story-texto"></blockquote>
-          <!-- Textarea de edición (solo visible para admin) -->
-          <div class="detalle-historia-edit" id="detalle-historia-edit" style="display:none;">
-            <textarea id="detalle-historia-textarea" rows="6" placeholder="Escribe la historia o curiosidades de este álbum…"></textarea>
-            <button class="detalle-historia-save" onclick="guardarHistoriaDesdeModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Guardar historia
-            </button>
-          </div>
+
         </div>
 
         <div class="modal-detalle__meta" id="detalle-meta-bloque">
           <div class="meta-item">
             <span class="meta-item__label">Precio</span>
             <span class="meta-item__value meta-item__value--price" id="detalle-precio">—</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-item__label">Stock</span>
-            <span class="meta-item__value" id="detalle-stock">—</span>
           </div>
           <div class="meta-item">
             <span class="meta-item__label">Formato</span>

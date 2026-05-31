@@ -1,14 +1,10 @@
 // ══════════════════════════════════════════════════════════
-//  VinylVibes — admin.js  (v2)
-//
-//  Cambio principal: las peticiones protegidas envían el JWT
-//  en el header Authorization en lugar de pasar nombre_usuario
-//  en el body. El backend valida el token y comprueba el rol.
+//  VinylVibes — admin.js v3
+//  Gestión de usuarios y ventas
 // ══════════════════════════════════════════════════════════
 
 const API = 'https://api-tienda-vinilos.onrender.com';
 
-/** Devuelve los headers estándar con el token JWT del usuario logueado. */
 function authHeaders() {
     return {
         'Content-Type':  'application/json',
@@ -16,239 +12,295 @@ function authHeaders() {
     };
 }
 
-document.getElementById('form-disco').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
+// ── INIT ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
     const token   = localStorage.getItem('vv_token');
-    const mensaje = document.getElementById('mensaje-admin');
+    const esAdmin = localStorage.getItem('esAdmin') === 'true';
 
-    if (!token) {
-        mostrarMensaje(mensaje, '❌ Debes estar logueado como admin.', false);
+    if (!token || !esAdmin) {
+        mostrarToast('Acceso denegado. Solo administradores.', 'error');
+        setTimeout(() => window.location.href = 'index.html', 1500);
         return;
     }
 
-    const disco = {
-        titulo:    document.getElementById('titulo').value.trim(),
-        artista:   document.getElementById('artista').value.trim(),
-        precio:    parseFloat(document.getElementById('precio').value),
-        stock:     parseInt(document.getElementById('stock').value),
-        imagen_url: document.getElementById('imagen_url').value.trim() || null,
-        anio:      parseInt(document.getElementById('anio')?.value)    || null,
-        genero:    document.getElementById('genero')?.value.trim()     || null,
-        video_url: document.getElementById('video_url')?.value.trim() || null,
-    };
-
-    // Validación básica
-    if (!disco.titulo || !disco.artista) {
-        mostrarMensaje(mensaje, '❌ El título y el artista son obligatorios.', false);
-        return;
-    }
-    if (isNaN(disco.precio) || disco.precio < 0) {
-        mostrarMensaje(mensaje, '❌ El precio debe ser un número positivo.', false);
-        return;
-    }
-
-    const submitBtn = e.target.querySelector('[type="submit"]');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando…'; }
-
-    try {
-        const respuesta = await fetch(`${API}/discos`, {
-            method:  'POST',
-            headers: authHeaders(),        // ← JWT en lugar de nombre_usuario en body
-            body:    JSON.stringify(disco),
-        });
-
-        const data = await respuesta.json();
-
-        if (respuesta.ok) {
-            mostrarMensaje(mensaje, `✅ "${data.titulo}" agregado exitosamente.`, true);
-            document.getElementById('form-disco').reset();
-
-            // Si el disco tiene historia, guardarla también
-            const historiaEl = document.getElementById('historia_cuerpo');
-            const resumenEl  = document.getElementById('historia_resumen');
-            if (historiaEl?.value.trim() && data.id) {
-                await guardarHistoria(data.id, resumenEl?.value.trim(), historiaEl.value.trim());
-            }
-        } else {
-            mostrarMensaje(mensaje, `❌ ${data.error || 'Error al guardar el disco.'}`, false);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarMensaje(mensaje, '❌ Error de conexión con el servidor.', false);
-    } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Guardar en Catálogo'; }
-    }
+    await Promise.all([cargarUsuarios(), cargarVentas()]);
+    cargarStats();
 });
 
-// ── Guardar historia ──────────────────────────────────────
-async function guardarHistoria(id, resumen, cuerpo) {
+// ── TABS ──────────────────────────────────────────
+function cambiarTab(tab, btn) {
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+// ── STATS ─────────────────────────────────────────
+async function cargarStats() {
     try {
-        await fetch(`${API}/discos/${id}/historia`, {
+        const [rU, rV] = await Promise.all([
+            fetch(`${API}/admin/usuarios`, { headers: authHeaders() }),
+            fetch(`${API}/admin/ventas`,   { headers: authHeaders() }),
+        ]);
+        const usuarios = await rU.json();
+        const ventas   = await rV.json();
+
+        document.getElementById('stat-usuarios').textContent   = usuarios.length || 0;
+        document.getElementById('stat-ventas').textContent     = ventas.length   || 0;
+        document.getElementById('stat-pendientes').textContent = ventas.filter(v => v.estado === 'pendiente').length;
+        const ingresos = ventas.reduce((s, v) => s + Number(v.total), 0);
+        document.getElementById('stat-ingresos').textContent   = `$${ingresos.toFixed(2)}`;
+    } catch (e) {
+        console.warn('Stats error:', e.message);
+    }
+}
+
+// ── USUARIOS ──────────────────────────────────────
+let _usuarios = [];
+
+async function cargarUsuarios() {
+    try {
+        const resp = await fetch(`${API}/admin/usuarios`, { headers: authHeaders() });
+        if (!resp.ok) throw new Error('Error al cargar usuarios');
+        _usuarios = await resp.json();
+        renderizarUsuarios(_usuarios);
+    } catch (e) {
+        document.getElementById('tabla-loading').textContent = 'Error al cargar usuarios.';
+        console.error(e);
+    }
+}
+
+function renderizarUsuarios(lista) {
+    const loading = document.getElementById('tabla-loading');
+    const tabla   = document.getElementById('tabla-usuarios');
+    const tbody   = document.getElementById('tbody-usuarios');
+
+    loading.style.display = 'none';
+    tabla.style.display   = 'table';
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">No hay usuarios.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(u => `
+        <tr>
+            <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.75rem;">#${u.id_usuario}</td>
+            <td style="color:var(--text-primary);font-weight:500;">${u.nombre}</td>
+            <td>${u.correo || '—'}</td>
+            <td><span class="badge badge--${u.rol}">${u.rol}</span></td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">${formatearFecha(u.created_at)}</td>
+            <td>
+                <select class="select-rol" onchange="cambiarRol(${u.id_usuario}, this.value)">
+                    <option value="cliente"  ${u.rol === 'cliente'  ? 'selected' : ''}>cliente</option>
+                    <option value="vendedor" ${u.rol === 'vendedor' ? 'selected' : ''}>vendedor</option>
+                    <option value="admin"    ${u.rol === 'admin'    ? 'selected' : ''}>admin</option>
+                </select>
+                <button class="btn-table btn-table--danger" onclick="eliminarUsuario(${u.id_usuario}, '${u.nombre}')">Eliminar</button>
+            </td>
+        </tr>`).join('');
+}
+
+function filtrarUsuarios(q) {
+    const filtrados = q
+        ? _usuarios.filter(u =>
+            u.nombre.toLowerCase().includes(q.toLowerCase()) ||
+            (u.correo || '').toLowerCase().includes(q.toLowerCase()))
+        : _usuarios;
+    renderizarUsuarios(filtrados);
+}
+
+async function cambiarRol(id, nuevoRol) {
+    try {
+        const resp = await fetch(`${API}/admin/usuarios/${id}/rol`, {
             method:  'PUT',
             headers: authHeaders(),
-            body:    JSON.stringify({ resumen, cuerpo }),
+            body:    JSON.stringify({ rol: nuevoRol }),
         });
+        if (resp.ok) {
+            mostrarToast(`Rol actualizado a "${nuevoRol}".`, 'success');
+            const u = _usuarios.find(u => u.id_usuario === id);
+            if (u) u.rol = nuevoRol;
+        } else {
+            const d = await resp.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo actualizar el rol.'), 'error');
+        }
     } catch (e) {
-        console.warn('No se pudo guardar la historia:', e.message);
+        mostrarToast('Error de conexión.', 'error');
     }
 }
 
-// ── Helper de mensajes ────────────────────────────────────
-function mostrarMensaje(el, texto, esExito) {
-    if (!el) return;
-    el.innerText = texto;
-    el.style.color = esExito ? '#6ee7b7' : '#fca5a5';
-    setTimeout(() => { el.innerText = ''; }, 5000);
-}
-
-// ── IMPORTAR DESDE DISCOGS ────────────────────────────────
-
-let discogsSeleccionado = null;
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    // Buscar
-    const btnBuscar = document.getElementById('btn-discogs-buscar');
-    if (btnBuscar) {
-        btnBuscar.addEventListener('click', buscarEnDiscogs);
-        document.getElementById('discogs-query')?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') buscarEnDiscogs();
-        });
-    }
-
-    // Importar
-    const btnImportar = document.getElementById('btn-discogs-importar');
-    if (btnImportar) {
-        btnImportar.addEventListener('click', importarDisco);
-    }
-});
-
-async function buscarEnDiscogs() {
-    const q       = document.getElementById('discogs-query')?.value.trim();
-    const btn     = document.getElementById('btn-discogs-buscar');
-    const lista   = document.getElementById('discogs-lista');
-    const section = document.getElementById('discogs-resultados');
-
-    if (!q) return;
-
-    btn.disabled = true;
-    btn.textContent = 'Buscando…';
-    lista.innerHTML = '';
-    section.style.display = 'none';
-    document.getElementById('discogs-form-importar').style.display = 'none';
-
+async function eliminarUsuario(id, nombre) {
+    if (!confirm(`¿Eliminar al usuario "${nombre}"? Esta acción no se puede deshacer.`)) return;
     try {
-        const resp = await fetch(`${API}/discogs/buscar?q=${encodeURIComponent(q)}`, {
+        const resp = await fetch(`${API}/admin/usuarios/${id}`, {
+            method:  'DELETE',
             headers: authHeaders(),
         });
-        const data = await resp.json();
-
-        if (!resp.ok) {
-            alert(data.error || 'Error al buscar en Discogs.');
-            return;
+        if (resp.ok) {
+            mostrarToast(`Usuario "${nombre}" eliminado.`, 'success');
+            _usuarios = _usuarios.filter(u => u.id_usuario !== id);
+            renderizarUsuarios(_usuarios);
+            cargarStats();
+        } else {
+            const d = await resp.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo eliminar.'), 'error');
         }
-
-        if (data.resultados.length === 0) {
-            lista.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No se encontraron resultados.</p>';
-            section.style.display = 'block';
-            return;
-        }
-
-        data.resultados.forEach(disco => {
-            const el = document.createElement('div');
-            el.style.cssText = 'display:flex; gap:12px; align-items:center; padding:10px; background:var(--bg-raised); border:1px solid var(--border-subtle); border-radius:var(--r-sm); cursor:pointer;';
-            el.innerHTML = `
-                ${disco.imagen_url ? `<img src="${disco.imagen_url}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">` : ''}
-                <div style="flex:1;">
-                    <p style="font-weight:600; font-size:0.875rem; margin-bottom:2px;">${disco.titulo}</p>
-                    <p style="font-size:0.75rem; color:var(--text-muted);">${[disco.genero, disco.anio].filter(Boolean).join(' · ')}</p>
-                </div>
-                <span style="font-size:0.7rem; color:var(--amber);">Seleccionar →</span>
-            `;
-            el.addEventListener('click', () => seleccionarDisco(disco));
-            lista.appendChild(el);
-        });
-
-        section.style.display = 'block';
-    } catch (err) {
-        alert('Error de conexión con el servidor.');
-        console.error(err);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Buscar';
+    } catch (e) {
+        mostrarToast('Error de conexión.', 'error');
     }
 }
 
-function seleccionarDisco(disco) {
-    discogsSeleccionado = disco;
+// ── VENTAS ────────────────────────────────────────
+let _ventas = [];
 
-    const img   = document.getElementById('discogs-preview-img');
-    const titulo = document.getElementById('discogs-preview-titulo');
-    const info  = document.getElementById('discogs-preview-info');
-    const form  = document.getElementById('discogs-form-importar');
-
-    titulo.textContent = disco.titulo;
-    info.textContent   = [disco.artista, disco.genero, disco.anio].filter(Boolean).join(' · ');
-
-    if (disco.imagen_url) {
-        img.src = disco.imagen_url;
-        img.style.display = 'block';
-    } else {
-        img.style.display = 'none';
+async function cargarVentas() {
+    try {
+        const resp = await fetch(`${API}/admin/ventas`, { headers: authHeaders() });
+        if (!resp.ok) throw new Error('Error al cargar ventas');
+        _ventas = await resp.json();
+        renderizarVentas(_ventas);
+    } catch (e) {
+        document.getElementById('tabla-ventas-loading').textContent = 'Error al cargar ventas.';
+        console.error(e);
     }
-
-    form.style.display = 'block';
-    form.scrollIntoView({ behavior: 'smooth' });
 }
 
-async function importarDisco() {
-    if (!discogsSeleccionado) return;
+function renderizarVentas(lista) {
+    const loading = document.getElementById('tabla-ventas-loading');
+    const tabla   = document.getElementById('tabla-ventas');
+    const tbody   = document.getElementById('tbody-ventas');
 
-    const precio  = parseFloat(document.getElementById('discogs-precio')?.value);
-    const stock   = parseInt(document.getElementById('discogs-stock')?.value) || 10;
-    const mensaje = document.getElementById('mensaje-discogs');
-    const btn     = document.getElementById('btn-discogs-importar');
+    loading.style.display = 'none';
+    tabla.style.display   = 'table';
 
-    if (isNaN(precio) || precio < 0) {
-        mensaje.style.color = '#fca5a5';
-        mensaje.textContent = 'Por favor ingresa un precio válido.';
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">No hay ventas.</td></tr>`;
         return;
     }
 
-    btn.disabled = true;
-    btn.textContent = 'Importando…';
-    mensaje.textContent = '';
+    tbody.innerHTML = lista.map(v => `
+        <tr>
+            <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:0.75rem;">#${v.id_venta}</td>
+            <td style="color:var(--text-primary);font-weight:500;">${v.cliente?.nombre || '—'}</td>
+            <td style="color:var(--amber);font-weight:600;">$${Number(v.total).toFixed(2)}</td>
+            <td><span class="badge badge--${v.estado}">${v.estado}</span></td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">${formatearFecha(v.fecha)}</td>
+            <td>
+                <button class="btn-table" onclick="verDetalleVenta(${v.id_venta})">Ver detalle</button>
+                <select class="select-rol" onchange="cambiarEstadoVenta(${v.id_venta}, this.value)">
+                    <option value="pendiente"  ${v.estado === 'pendiente'  ? 'selected' : ''}>pendiente</option>
+                    <option value="pagada"     ${v.estado === 'pagada'     ? 'selected' : ''}>pagada</option>
+                    <option value="enviada"    ${v.estado === 'enviada'    ? 'selected' : ''}>enviada</option>
+                    <option value="entregada"  ${v.estado === 'entregada'  ? 'selected' : ''}>entregada</option>
+                    <option value="cancelada"  ${v.estado === 'cancelada'  ? 'selected' : ''}>cancelada</option>
+                </select>
+            </td>
+        </tr>`).join('');
+}
+
+function filtrarVentas(q) {
+    const filtrados = q
+        ? _ventas.filter(v =>
+            String(v.id_venta).includes(q) ||
+            (v.cliente?.nombre || '').toLowerCase().includes(q.toLowerCase()))
+        : _ventas;
+    renderizarVentas(filtrados);
+}
+
+async function cambiarEstadoVenta(id, nuevoEstado) {
+    try {
+        const resp = await fetch(`${API}/admin/ventas/${id}/estado`, {
+            method:  'PUT',
+            headers: authHeaders(),
+            body:    JSON.stringify({ estado: nuevoEstado }),
+        });
+        if (resp.ok) {
+            mostrarToast(`Estado actualizado a "${nuevoEstado}".`, 'success');
+            const v = _ventas.find(v => v.id_venta === id);
+            if (v) v.estado = nuevoEstado;
+            cargarStats();
+        } else {
+            const d = await resp.json();
+            mostrarToast('Error: ' + (d.error || 'No se pudo actualizar.'), 'error');
+        }
+    } catch (e) {
+        mostrarToast('Error de conexión.', 'error');
+    }
+}
+
+async function verDetalleVenta(id) {
+    const venta = _ventas.find(v => v.id_venta === id);
+    if (!venta) return;
 
     try {
-        const resp = await fetch(`${API}/discogs/importar`, {
-            method:  'POST',
-            headers: authHeaders(),
-            body:    JSON.stringify({
-                discogs_id: discogsSeleccionado.discogs_id,
-                precio,
-                stock,
-            }),
-        });
-        const data = await resp.json();
+        const resp = await fetch(`${API}/admin/ventas/${id}`, { headers: authHeaders() });
+        const data = resp.ok ? await resp.json() : venta;
 
-        if (resp.ok) {
-            mensaje.style.color = '#6ee7b7';
-            mensaje.textContent = `✅ ${data.mensaje} ${data.video ? '· Con video' : '· Sin video'} · ${data.historia}`;
-            document.getElementById('discogs-form-importar').style.display = 'none';
-            document.getElementById('discogs-resultados').style.display = 'none';
-            document.getElementById('discogs-query').value = '';
-            discogsSeleccionado = null;
-        } else {
-            mensaje.style.color = '#fca5a5';
-            mensaje.textContent = `❌ ${data.error || 'Error al importar.'}`;
-        }
-    } catch (err) {
-        mensaje.style.color = '#fca5a5';
-        mensaje.textContent = '❌ Error de conexión con el servidor.';
-        console.error(err);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '⬇ Importar disco';
+        const lineas = data.lineas || [];
+        const envio  = data.envio  || null;
+
+        document.getElementById('venta-detalle-body').innerHTML = `
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">
+                Venta #${id} · ${data.cliente?.nombre || '—'} · <span class="badge badge--${data.estado}">${data.estado}</span>
+            </p>
+            <p style="font-size:0.85rem;font-weight:600;margin-bottom:8px;color:var(--text-muted);">DISCOS</p>
+            ${lineas.map(l => `
+                <div class="venta-item">
+                    <span>${l.titulo} <span style="color:var(--text-muted);font-size:0.8rem;">x${l.cantidad}</span></span>
+                    <span>$${Number(l.subtotal).toFixed(2)}</span>
+                </div>`).join('')}
+            <div class="venta-item" style="font-weight:700;color:var(--amber);">
+                <span>Total</span>
+                <span>$${Number(data.total).toFixed(2)}</span>
+            </div>
+            ${envio ? `
+            <p style="font-size:0.85rem;font-weight:600;margin:16px 0 8px;color:var(--text-muted);">ENVÍO</p>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">
+                ${envio.nombre_receptor}<br>
+                ${envio.calle} ${envio.numero_ext}${envio.numero_int ? ' Int. '+envio.numero_int : ''}<br>
+                ${envio.colonia}, ${envio.ciudad}, ${envio.estado} ${envio.codigo_postal}
+                ${envio.referencias ? `<br><span style="color:var(--text-muted);">${envio.referencias}</span>` : ''}
+            </p>` : ''}`;
+
+        document.getElementById('modal-venta').classList.add('open');
+    } catch (e) {
+        mostrarToast('Error al cargar el detalle.', 'error');
     }
+}
+
+function cerrarModalVenta() {
+    document.getElementById('modal-venta').classList.remove('open');
+}
+
+// ── HELPERS ───────────────────────────────────────
+function formatearFecha(fecha) {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleDateString('es-MX', {
+        day:   '2-digit',
+        month: 'short',
+        year:  'numeric',
+    });
+}
+
+function mostrarToast(mensaje, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const colores = { success: '#6ee7b7', error: '#fca5a5', warning: '#fcd34d', info: '#93c5fd' };
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${tipo}`;
+    toast.style.cssText = `position:fixed;bottom:24px;right:24px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 18px;font-size:0.875rem;color:${colores[tipo]};box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:9999;transition:all 0.3s;opacity:0;transform:translateY(10px);`;
+    toast.textContent = mensaje;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }));
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
