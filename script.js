@@ -20,6 +20,9 @@ let _queryActual   = '';
 
 const GENEROS_FIJOS = ['Rock', 'Jazz', 'Pop', 'Electronic', 'Hip Hop', 'Classical', 'Blues', 'Folk', 'Latin', 'Reggae'];
 
+// Carrito — debe declararse antes de cualquier función que lo use
+let carrito = JSON.parse(localStorage.getItem('vv_carrito') || '[]');
+
 // ── SINCRONIZACIÓN ENTRE PESTAÑAS ─────────────────
 window.addEventListener('storage', (e) => {
     if (e.key === 'vv_carrito') {
