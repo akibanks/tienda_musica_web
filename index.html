@@ -143,6 +143,7 @@
     </div>
     <div class="generos-filtros" id="generos-filtros"></div>
     <div id="generos-grid" class="generos-grid"></div>
+    <div id="generos-paginacion" style="display:flex;justify-content:center;align-items:center;gap:12px;padding:20px 0;"></div>
   </section>
 
   <!-- ═══ SECCIÓN NOVEDADES & STORYTELLING ════════════════ -->
@@ -170,9 +171,17 @@
     </div>
 
     <!-- Grid de discos — renderizado por JS con abrirModalStorytelling -->
+    <!-- Buscador de novedades -->
+    <div style="display:flex;justify-content:center;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:var(--r-md);padding:8px 16px;width:100%;max-width:420px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" id="novedades-search" placeholder="Buscar en Novedades & Historias..." oninput="buscarEnNovedades(this.value)" style="background:none;border:none;outline:none;color:var(--text-primary);font-size:0.875rem;width:100%;">
+      </div>
+    </div>
     <div id="novedades-grid" class="novedades-grid" aria-live="polite">
       <!-- Cards insertadas por renderizarNovedades() -->
     </div>
+    <div id="novedades-paginacion" style="display:flex;justify-content:center;align-items:center;gap:12px;padding:20px 0;"></div>
   </section>
 
   <!-- ═══ FOOTER ════════════════════════════════════════ -->

@@ -111,6 +111,14 @@ function filtrarUsuarios(q) {
 }
 
 async function cambiarRol(id, nuevoRol) {
+    // Proteger al admin actual de quitarse su propio rol
+    const miId = JSON.parse(atob(localStorage.getItem('vv_token').split('.')[1])).id;
+    if (id === miId && nuevoRol !== 'admin') {
+        mostrarToast('No puedes quitarte el rol de admin.', 'error');
+        // Revertir el select visualmente
+        await cargarUsuarios();
+        return;
+    }
     try {
         const resp = await fetch(`${API}/admin/usuarios/${id}/rol`, {
             method:  'PUT',

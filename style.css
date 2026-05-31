@@ -2956,3 +2956,35 @@ width: 100%; /* Se adaptará al ancho que le deje el padding del padre */
   .modal-envio__row--3 { grid-template-columns: 1fr; }
   .modal-envio__row--3 .input-group:first-child { grid-column: 1; }
 }
+
+/* ── Paginación ── */
+.pag-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.pag-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pag-info {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}

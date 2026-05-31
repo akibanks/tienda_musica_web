@@ -13,7 +13,12 @@ let carruselOffset = 0;
 const CARRUSEL_STEP = 220;
 let _carruselData  = [];
 let _generoCache   = {};
-let discoActivo    = null;
+let discoActivo      = null;
+let _novedadesPagina = 1;
+let _novedadesQuery  = '';
+let _novedadesData   = [];
+let _generosPagina   = 1;
+const ITEMS_POR_PAGINA = 8;
 let _buscarTimeout = null;
 let _paginaActual  = 1;
 let _queryActual   = '';
@@ -531,6 +536,11 @@ async function seleccionarGenero(btn, genero) {
 }
 
 function _renderizarGridGeneros(lista) {
+    _generosPagina = 1;
+    _renderizarGridGenerosPag(lista);
+}
+
+function _renderizarGridGenerosPag(lista) {
     const gridEl = document.getElementById('generos-grid');
     if (!gridEl) return;
 
@@ -539,7 +549,12 @@ function _renderizarGridGeneros(lista) {
         return;
     }
 
-    gridEl.innerHTML = lista.map(disco => {
+    const total     = lista.length;
+    const inicio    = (_generosPagina - 1) * ITEMS_POR_PAGINA;
+    const pagina    = lista.slice(inicio, inicio + ITEMS_POR_PAGINA);
+    const totalPags = Math.ceil(total / ITEMS_POR_PAGINA);
+
+    gridEl.innerHTML = pagina.map(disco => {
         const img    = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         const genero = disco.genero ? `<span class="novedad-card__genero-tag">${disco.genero}</span>` : '';
         return `
@@ -564,19 +579,67 @@ function _renderizarGridGeneros(lista) {
             </div>
         </article>`;
     }).join('');
+
+    _renderizarPaginacionGeneros(totalPags, _generosPagina, lista);
+}
+
+function _renderizarPaginacionGeneros(totalPags, actual, lista) {
+    const el = document.getElementById('generos-paginacion');
+    if (!el) return;
+    if (totalPags <= 1) { el.innerHTML = ''; return; }
+
+    el.innerHTML = `
+        <button class="pag-btn" onclick="cambiarPaginaGeneros(${actual - 1})" ${actual <= 1 ? 'disabled' : ''}>
+            ← Anterior
+        </button>
+        <span class="pag-info">${actual} / ${totalPags}</span>
+        <button class="pag-btn" onclick="cambiarPaginaGeneros(${actual + 1})" ${actual >= totalPags ? 'disabled' : ''}>
+            Siguiente →
+        </button>`;
+
+    // store lista reference for pagination
+    window._generoListaActual = lista;
+}
+
+function cambiarPaginaGeneros(pag) {
+    const lista     = window._generoListaActual || [];
+    const totalPags = Math.ceil(lista.length / ITEMS_POR_PAGINA);
+    if (pag < 1 || pag > totalPags) return;
+    _generosPagina = pag;
+    _renderizarGridGenerosPag(lista);
+    document.getElementById('section-generos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── NOVEDADES ─────────────────────────────────────
 function renderizarNovedades(lista) {
+    _novedadesData   = lista;
+    _novedadesPagina = 1;
+    _novedadesQuery  = '';
+    _renderizarNovedadesGrid();
+}
+
+function _renderizarNovedadesGrid() {
     const grid = document.getElementById('novedades-grid');
     if (!grid) return;
 
-    if (!lista || lista.length === 0) {
+    const lista    = _novedadesQuery
+        ? _novedadesData.filter(d =>
+            d.titulo?.toLowerCase().includes(_novedadesQuery) ||
+            (d.artista || '').toLowerCase().includes(_novedadesQuery))
+        : _novedadesData;
+
+    const total   = lista.length;
+    const inicio  = (_novedadesPagina - 1) * ITEMS_POR_PAGINA;
+    const pagina  = lista.slice(inicio, inicio + ITEMS_POR_PAGINA);
+    const totalPags = Math.ceil(total / ITEMS_POR_PAGINA);
+
+    if (!pagina.length) {
         grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px 0;">No hay discos disponibles.</p>';
+        _renderizarPaginacionNovedades(0, 1);
         return;
     }
 
-    grid.innerHTML = lista.map(disco => {
+    grid.innerHTML = pagina.map(disco => {
         const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         return `
         <article class="novedad-card"
@@ -599,6 +662,42 @@ function renderizarNovedades(lista) {
             </div>
         </article>`;
     }).join('');
+
+    _renderizarPaginacionNovedades(totalPags, _novedadesPagina);
+}
+
+function _renderizarPaginacionNovedades(totalPags, actual) {
+    const el = document.getElementById('novedades-paginacion');
+    if (!el) return;
+    if (totalPags <= 1) { el.innerHTML = ''; return; }
+
+    el.innerHTML = `
+        <button class="pag-btn" onclick="cambiarPaginaNovedades(${actual - 1})" ${actual <= 1 ? 'disabled' : ''}>
+            ← Anterior
+        </button>
+        <span class="pag-info">${actual} / ${totalPags}</span>
+        <button class="pag-btn" onclick="cambiarPaginaNovedades(${actual + 1})" ${actual >= totalPags ? 'disabled' : ''}>
+            Siguiente →
+        </button>`;
+}
+
+function cambiarPaginaNovedades(pag) {
+    const lista = _novedadesQuery
+        ? _novedadesData.filter(d =>
+            d.titulo?.toLowerCase().includes(_novedadesQuery) ||
+            (d.artista || '').toLowerCase().includes(_novedadesQuery))
+        : _novedadesData;
+    const totalPags = Math.ceil(lista.length / ITEMS_POR_PAGINA);
+    if (pag < 1 || pag > totalPags) return;
+    _novedadesPagina = pag;
+    _renderizarNovedadesGrid();
+    document.getElementById('section-novedades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buscarEnNovedades(q) {
+    _novedadesQuery  = q.toLowerCase().trim();
+    _novedadesPagina = 1;
+    _renderizarNovedadesGrid();
 }
 
 // ── SCROLL HELPERS ────────────────────────────────
@@ -762,7 +861,7 @@ function actualizarInterfazUsuario() {
                 Carrito
                 <span class="cart-badge" id="carrito-count">0</span>
             </button>
-            ${esAdmin ? `<a href="admin.html" class="btn-ghost btn-sm">⚙ Admin</a>` : ''}
+            ${esAdmin ? `<a href="admin.html" class="cart-btn btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</a>` : ''}
             <span style="font-size:0.8rem;color:var(--text-muted);padding:0 4px;">${usuario}</span>
             <button class="btn-ghost btn-sm" onclick="cerrarSesion()">Salir</button>`;
     } else {
