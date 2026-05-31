@@ -613,7 +613,6 @@ function scrollToNovedades(e) {
 }
 
 // ── CARRITO ───────────────────────────────────────
-let carrito = JSON.parse(localStorage.getItem('vv_carrito') || '[]');
 
 function guardarCarrito() {
     localStorage.setItem('vv_carrito', JSON.stringify(carrito));
