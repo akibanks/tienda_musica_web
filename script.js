@@ -941,6 +941,10 @@ function actualizarInterfazUsuario() {
                 Carrito
                 <span class="cart-badge" id="carrito-count">0</span>
             </button>
+            <button class="cart-btn btn-sm" onclick="toggleHistorial()" aria-label="Ver historial de compras">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                Mis Compras
+            </button>
             ${esAdmin ? `<button class="cart-btn btn-sm" onclick="window.location.href='admin.html'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</button>` : ''}
             <span style="font-size:0.8rem;color:var(--text-muted);padding:0 4px;">${usuario}</span>
             <button class="btn-ghost btn-sm" onclick="cerrarSesion()">Salir</button>`;
@@ -1256,6 +1260,120 @@ async function procesarPago() {
         if (submitBtn) { submitBtn.classList.remove('loading'); submitBtn.disabled = false; }
         if (submitTxt) submitTxt.textContent = `Pagar $${Number(_discoPagoActivo.precio).toFixed(2)}`;
     }
+}
+
+
+// ── HISTORIAL DE COMPRAS ──────────────────────────
+const COMPRAS_POR_PAGINA = 10;
+let _comprasData   = [];
+let _comprasPagina = 1;
+
+async function toggleHistorial() {
+    const panel   = document.getElementById('historial-panel');
+    const overlay = document.getElementById('historial-overlay');
+    const isOpen  = panel.classList.contains('open');
+
+    if (isOpen) {
+        panel.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    } else {
+        panel.classList.add('open');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        await cargarHistorialCompras();
+    }
+}
+
+async function cargarHistorialCompras() {
+    const contenido = document.getElementById('historial-contenido');
+    const pagEl     = document.getElementById('historial-paginacion');
+
+    if (!localStorage.getItem('vv_token')) {
+        contenido.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:40px 0;font-size:0.875rem;">Inicia sesión para ver tus compras.</p>`;
+        if (pagEl) pagEl.innerHTML = '';
+        return;
+    }
+
+    contenido.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:40px 0;font-size:0.875rem;">Cargando…</p>`;
+    if (pagEl) pagEl.innerHTML = '';
+
+    try {
+        const resp = await fetch(`${API}/mis-compras`, { headers: authHeaders() });
+        if (!resp.ok) throw new Error('Error al cargar compras');
+        _comprasData   = await resp.json();
+        _comprasPagina = 1;
+        _renderizarCompras();
+    } catch (e) {
+        contenido.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:40px 0;font-size:0.875rem;">Error al cargar el historial.</p>`;
+    }
+}
+
+function _renderizarCompras() {
+    const contenido = document.getElementById('historial-contenido');
+    const pagEl     = document.getElementById('historial-paginacion');
+
+    if (!_comprasData.length) {
+        contenido.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;display:block;margin:0 auto 12px;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                <p style="color:var(--text-muted);font-size:0.875rem;">Aún no has realizado compras.</p>
+            </div>`;
+        if (pagEl) pagEl.innerHTML = '';
+        return;
+    }
+
+    const total     = _comprasData.length;
+    const totalPags = Math.ceil(total / COMPRAS_POR_PAGINA);
+    const inicio    = (_comprasPagina - 1) * COMPRAS_POR_PAGINA;
+    const pagina    = _comprasData.slice(inicio, inicio + COMPRAS_POR_PAGINA);
+
+    contenido.innerHTML = pagina.map(venta => {
+        const fecha  = new Date(venta.fecha).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+        const discos = venta.discos.map(d => `
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-dim);font-size:0.8rem;">
+                <div>
+                    <span style="color:var(--text-primary);">${d.titulo}</span>
+                    <span style="color:var(--text-muted);margin-left:6px;">× ${d.cantidad}</span>
+                    <div style="color:var(--text-muted);font-size:0.75rem;">${d.artista || '—'}</div>
+                </div>
+                <span style="color:var(--amber);font-weight:600;white-space:nowrap;">$${d.subtotal.toFixed(2)}</span>
+            </div>`).join('');
+
+        return `
+            <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <div>
+                        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-muted);">Orden #${venta.id_venta}</span>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">${fecha}${venta.ciudad ? ' · ' + venta.ciudad : ''}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;color:var(--amber);">$${venta.total.toFixed(2)}</div>
+                        <span style="font-size:0.7rem;font-family:'DM Mono',monospace;color:var(--text-muted);">${venta.estado}</span>
+                    </div>
+                </div>
+                ${discos}
+            </div>`;
+    }).join('');
+
+    // Paginación
+    if (pagEl) {
+        if (totalPags <= 1) {
+            pagEl.innerHTML = '';
+        } else {
+            pagEl.innerHTML = `
+                <button class="pag-btn" onclick="_cambiarPaginaCompras(${_comprasPagina - 1})" ${_comprasPagina <= 1 ? 'disabled' : ''}>← Anterior</button>
+                <span class="pag-info">${_comprasPagina} / ${totalPags}</span>
+                <button class="pag-btn" onclick="_cambiarPaginaCompras(${_comprasPagina + 1})" ${_comprasPagina >= totalPags ? 'disabled' : ''}>Siguiente →</button>`;
+        }
+    }
+}
+
+function _cambiarPaginaCompras(pag) {
+    const totalPags = Math.ceil(_comprasData.length / COMPRAS_POR_PAGINA);
+    if (pag < 1 || pag > totalPags) return;
+    _comprasPagina = pag;
+    _renderizarCompras();
 }
 
 // ── INIT DOM ──────────────────────────────────────

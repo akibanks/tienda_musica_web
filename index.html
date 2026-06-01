@@ -489,5 +489,21 @@
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <script src="script.js"></script>
+
+  <!-- ═══ PANEL HISTORIAL DE COMPRAS ═══════════════════════ -->
+  <div id="historial-overlay" class="cart-overlay" onclick="toggleHistorial()"></div>
+  <aside id="historial-panel" class="cart-panel" aria-label="Historial de compras">
+    <div class="cart-panel__header">
+      <h2 class="cart-panel__title">Mis Compras</h2>
+      <button class="cart-panel__close" onclick="toggleHistorial()" aria-label="Cerrar historial">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="historial-contenido" class="cart-items" style="flex:1;overflow-y:auto;">
+      <p style="color:var(--text-muted);text-align:center;padding:40px 0;font-size:0.875rem;">Cargando historial…</p>
+    </div>
+    <div id="historial-paginacion" style="display:flex;justify-content:center;align-items:center;gap:10px;padding:12px 20px;border-top:1px solid var(--border-subtle);"></div>
+  </aside>
+
 </body>
 </html>
