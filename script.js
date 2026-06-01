@@ -211,20 +211,24 @@ function _renderizarPaginacion(totalPaginas, paginaActual, q) {
 
     const paginacion = document.createElement('div');
     paginacion.id = 'paginacion-container';
-    paginacion.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;gap:8px;padding:20px 0;';
+    paginacion.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:8px;padding:20px 0;flex-wrap:wrap;';
 
     const paginas = [];
     for (let i = Math.max(1, paginaActual - 2); i <= Math.min(totalPaginas, paginaActual + 2); i++) {
         paginas.push(i);
     }
 
-    paginacion.innerHTML = paginas.map(p => `
+    const btnAnterior = `<button class="pag-btn" onclick="buscarDiscos('${q}', ${paginaActual - 1})" ${paginaActual <= 1 ? 'disabled' : ''}>← Anterior</button>`;
+    const btnSiguiente = `<button class="pag-btn" onclick="buscarDiscos('${q}', ${paginaActual + 1})" ${paginaActual >= totalPaginas ? 'disabled' : ''}>Siguiente →</button>`;
+
+    const numeros = paginas.map(p => `
         <button
             onclick="buscarDiscos('${q}', ${p})"
             style="padding:6px 12px;border-radius:6px;border:1px solid var(--border-dim);background:${p === paginaActual ? 'var(--amber)' : 'var(--bg-raised)'};color:${p === paginaActual ? '#000' : 'var(--text-secondary)'};cursor:pointer;font-size:0.85rem;">
             ${p}
         </button>`).join('');
 
+    paginacion.innerHTML = btnAnterior + numeros + btnSiguiente;
     contenedor.appendChild(paginacion);
 }
 
@@ -510,26 +514,36 @@ function inicializarGeneros() {
     seleccionarGenero(filtrosEl.children[0], GENEROS_FIJOS[0]);
 }
 
+let _generoActual = '';
+
 async function seleccionarGenero(btn, genero) {
     document.querySelectorAll('.genero-btn').forEach(b => b.classList.remove('genero-btn--active'));
     btn.classList.add('genero-btn--active');
+    _generoActual  = genero;
+    _generosPagina = 1;
+    await _cargarGenero(genero, 1);
+}
 
+async function _cargarGenero(genero, pagina) {
     const gridEl = document.getElementById('generos-grid');
+    const pagEl  = document.getElementById('generos-paginacion');
     if (!gridEl) return;
 
-    if (_generoCache[genero]) {
-        _renderizarGridGeneros(_generoCache[genero]);
+    const clave = `${genero}:${pagina}`;
+    if (_generoCache[clave]) {
+        _renderizarGridGenerosPag(_generoCache[clave]);
         return;
     }
 
     gridEl.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">Cargando…</p>';
+    if (pagEl) pagEl.innerHTML = '';
 
     try {
-        const resp = await fetch(`${API}/genero/${encodeURIComponent(genero)}`);
+        const resp = await fetch(`${API}/genero/${encodeURIComponent(genero)}?pagina=${pagina}`);
         if (!resp.ok) throw new Error('Error al cargar género');
         const data = await resp.json();
-        _generoCache[genero] = data;
-        _renderizarGridGeneros(data);
+        _generoCache[clave] = data;
+        _renderizarGridGenerosPag(data);
     } catch (e) {
         gridEl.innerHTML = `<p class="generos-empty">Error al cargar ${genero}.</p>`;
     }
@@ -540,21 +554,21 @@ function _renderizarGridGeneros(lista) {
     _renderizarGridGenerosPag(lista);
 }
 
-function _renderizarGridGenerosPag(lista) {
+function _renderizarGridGenerosPag(data) {
     const gridEl = document.getElementById('generos-grid');
     if (!gridEl) return;
 
-    if (!lista || lista.length === 0) {
+    // data puede ser array (legacy) u objeto {resultados, paginas, pagina}
+    const lista     = Array.isArray(data) ? data : (data.resultados || []);
+    const totalPags = Array.isArray(data) ? 1    : (data.paginas    || 1);
+    const pagina    = Array.isArray(data) ? 1    : (data.pagina     || 1);
+
+    if (!lista.length) {
         gridEl.innerHTML = `<p class="generos-empty">No hay discos en este género.</p>`;
         return;
     }
 
-    const total     = lista.length;
-    const inicio    = (_generosPagina - 1) * ITEMS_POR_PAGINA;
-    const pagina    = lista.slice(inicio, inicio + ITEMS_POR_PAGINA);
-    const totalPags = Math.ceil(total / ITEMS_POR_PAGINA);
-
-    gridEl.innerHTML = pagina.map(disco => {
+    gridEl.innerHTML = lista.map(disco => {
         const img    = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
         const genero = disco.genero ? `<span class="novedad-card__genero-tag">${disco.genero}</span>` : '';
         return `
@@ -580,10 +594,10 @@ function _renderizarGridGenerosPag(lista) {
         </article>`;
     }).join('');
 
-    _renderizarPaginacionGeneros(totalPags, _generosPagina, lista);
+    _renderizarPaginacionGeneros(totalPags, pagina);
 }
 
-function _renderizarPaginacionGeneros(totalPags, actual, lista) {
+function _renderizarPaginacionGeneros(totalPags, actual) {
     const el = document.getElementById('generos-paginacion');
     if (!el) return;
     if (totalPags <= 1) { el.innerHTML = ''; return; }
@@ -596,17 +610,11 @@ function _renderizarPaginacionGeneros(totalPags, actual, lista) {
         <button class="pag-btn" onclick="cambiarPaginaGeneros(${actual + 1})" ${actual >= totalPags ? 'disabled' : ''}>
             Siguiente →
         </button>`;
-
-    // store lista reference for pagination
-    window._generoListaActual = lista;
 }
 
-function cambiarPaginaGeneros(pag) {
-    const lista     = window._generoListaActual || [];
-    const totalPags = Math.ceil(lista.length / ITEMS_POR_PAGINA);
-    if (pag < 1 || pag > totalPags) return;
-    _generosPagina = pag;
-    _renderizarGridGenerosPag(lista);
+async function cambiarPaginaGeneros(pag) {
+    if (!_generoActual) return;
+    await _cargarGenero(_generoActual, pag);
     document.getElementById('section-generos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 

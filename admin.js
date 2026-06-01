@@ -96,7 +96,7 @@ function renderizarUsuarios(lista) {
                     <option value="vendedor" ${u.rol === 'vendedor' ? 'selected' : ''}>vendedor</option>
                     <option value="admin"    ${u.rol === 'admin'    ? 'selected' : ''}>admin</option>
                 </select>
-                <button class="btn-table btn-table--danger" onclick="eliminarUsuario(${u.id_usuario}, '${u.nombre}')">Eliminar</button>
+                <button class="btn-table btn-table--danger" onclick="confirmarEliminarUsuario(${u.id_usuario}, '${u.nombre}')">Eliminar</button>
             </td>
         </tr>`).join('');
 }
@@ -138,8 +138,22 @@ async function cambiarRol(id, nuevoRol) {
     }
 }
 
+function confirmarEliminarUsuario(id, nombre) {
+    // Reemplazar la fila con botones de confirmación
+    const filas = document.querySelectorAll('#tbody-usuarios tr');
+    filas.forEach(fila => {
+        const idCelda = fila.querySelector('td:first-child');
+        if (idCelda && idCelda.textContent === `#${id}`) {
+            const accionesTd = fila.querySelector('td:last-child');
+            accionesTd.innerHTML = `
+                <span style="font-size:0.8rem;color:var(--text-muted);margin-right:8px;">¿Eliminar a "${nombre}"?</span>
+                <button class="btn-table btn-table--danger" onclick="eliminarUsuario(${id}, '${nombre}')">Confirmar</button>
+                <button class="btn-table" onclick="renderizarUsuarios(_usuarios)">Cancelar</button>`;
+        }
+    });
+}
+
 async function eliminarUsuario(id, nombre) {
-    if (!confirm(`¿Eliminar al usuario "${nombre}"? Esta acción no se puede deshacer.`)) return;
     try {
         const resp = await fetch(`${API}/admin/usuarios/${id}`, {
             method:  'DELETE',
