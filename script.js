@@ -18,7 +18,7 @@ let _novedadesPagina = 1;
 let _novedadesQuery  = '';
 let _novedadesData   = [];
 let _generosPagina   = 1;
-const ITEMS_POR_PAGINA = 8;
+const ITEMS_POR_PAGINA = 20;
 let _buscarTimeout = null;
 let _paginaActual  = 1;
 let _queryActual   = '';
@@ -694,10 +694,82 @@ function cambiarPaginaNovedades(pag) {
     document.getElementById('section-novedades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+let _novedadesBusquedaTimeout = null;
+let _novedadesBusquedaActiva  = false;
+
 function buscarEnNovedades(q) {
-    _novedadesQuery  = q.toLowerCase().trim();
-    _novedadesPagina = 1;
-    _renderizarNovedadesGrid();
+    clearTimeout(_novedadesBusquedaTimeout);
+    const query = q.trim();
+
+    if (!query) {
+        // Volver a los recientes
+        _novedadesBusquedaActiva = false;
+        _novedadesQuery  = '';
+        _novedadesPagina = 1;
+        _renderizarNovedadesGrid();
+        return;
+    }
+
+    _novedadesBusquedaTimeout = setTimeout(() => _buscarEnDiscogsModoStory(query), 500);
+}
+
+async function _buscarEnDiscogsModoStory(q, pagina = 1) {
+    _novedadesBusquedaActiva = true;
+    _novedadesPagina         = pagina;
+
+    const grid  = document.getElementById('novedades-grid');
+    const pagEl = document.getElementById('novedades-paginacion');
+    if (grid) grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px 0;grid-column:1/-1;">Buscando...</p>';
+    if (pagEl) pagEl.innerHTML = '';
+
+    try {
+        const resp = await fetch(`${API}/buscar?q=${encodeURIComponent(q)}&pagina=${pagina}`);
+        if (!resp.ok) throw new Error('Error');
+        const data = await resp.json();
+
+        if (!data.resultados.length) {
+            if (grid) grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px 0;grid-column:1/-1;">No se encontraron discos.</p>';
+            return;
+        }
+
+        // Render como novedades (storytelling mode)
+        if (grid) {
+            grid.innerHTML = data.resultados.map(disco => {
+                const img = disco.imagen_url || 'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400';
+                return `
+                <article class="novedad-card"
+                    role="button" tabindex="0"
+                    aria-label="${disco.titulo} por ${disco.artista} — leer historia"
+                    onclick="abrirModalStorytelling('${disco.discogs_id}')"
+                    onkeydown="if(event.key==='Enter'||event.key===' ')abrirModalStorytelling('${disco.discogs_id}')">
+                    <div class="novedad-card__img-wrap">
+                        <img src="${img}" alt="${disco.titulo}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=400'">
+                        <div class="novedad-card__story-hint">
+                            <span>
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                Leer historia
+                            </span>
+                        </div>
+                    </div>
+                    <div class="novedad-card__info">
+                        <div class="novedad-card__titulo">${disco.titulo}</div>
+                        <div class="novedad-card__artista">${disco.artista || '—'}</div>
+                    </div>
+                </article>`;
+            }).join('');
+        }
+
+        // Paginación con Anterior/Siguiente
+        if (pagEl && data.paginas > 1) {
+            pagEl.innerHTML = `
+                <button class="pag-btn" onclick="_buscarEnDiscogsModoStory('${q}', ${pagina - 1})" ${pagina <= 1 ? 'disabled' : ''}>← Anterior</button>
+                <span class="pag-info">${pagina} / ${data.paginas}</span>
+                <button class="pag-btn" onclick="_buscarEnDiscogsModoStory('${q}', ${pagina + 1})" ${pagina >= data.paginas ? 'disabled' : ''}>Siguiente →</button>`;
+        }
+
+    } catch (e) {
+        if (grid) grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px 0;grid-column:1/-1;">Error al buscar. Intenta de nuevo.</p>';
+    }
 }
 
 // ── SCROLL HELPERS ────────────────────────────────
@@ -861,7 +933,7 @@ function actualizarInterfazUsuario() {
                 Carrito
                 <span class="cart-badge" id="carrito-count">0</span>
             </button>
-            ${esAdmin ? `<a href="admin.html" class="cart-btn btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</a>` : ''}
+            ${esAdmin ? `<button class="cart-btn btn-sm" onclick="window.location.href='admin.html'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</button>` : ''}
             <span style="font-size:0.8rem;color:var(--text-muted);padding:0 4px;">${usuario}</span>
             <button class="btn-ghost btn-sm" onclick="cerrarSesion()">Salir</button>`;
     } else {
