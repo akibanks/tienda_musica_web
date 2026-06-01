@@ -1,7 +1,4 @@
-/* ══════════════════════════════════════════════
-   VINYLVIBES — Premium CSS Design System
-   Aesthetic: Luxury Vinyl Collector · Dark Mode
-   ══════════════════════════════════════════════ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
@@ -2987,4 +2984,245 @@ width: 100%; /* Se adaptará al ancho que le deje el padding del padre */
   font-size: 0.78rem;
   color: var(--text-muted);
   letter-spacing: 0.05em;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile & Tablet
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤ 900px) ─────────────────────────── */
+@media (max-width: 900px) {
+
+  /* Header */
+  .header-content {
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    height: auto;
+    padding: 12px 20px;
+    gap: 8px;
+  }
+
+  .header-nav {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    gap: 2px;
+  }
+
+  .header-nav::-webkit-scrollbar { display: none; }
+
+  .auth-section {
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  /* Catalog grid */
+  .grid-discos {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  /* Main container */
+  .main-container { padding: 0 20px; }
+
+  /* Géneros */
+  .generos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  /* Novedades */
+  .novedades-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  /* Modal detalle */
+  .modal-detalle__inner {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .modal-detalle__poster {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* Cart panel */
+  .cart-panel { width: 100%; max-width: 100%; }
+}
+
+/* ── Mobile (≤ 600px) ─────────────────────────── */
+@media (max-width: 600px) {
+
+  /* Header */
+  .header-content {
+    padding: 10px 16px;
+  }
+
+  .logo h1 { font-size: 1.1rem; }
+  .logo-icon { width: 28px; height: 28px; }
+
+  .nav-link {
+    font-size: 0.78rem;
+    padding: 6px 10px;
+  }
+
+  /* Ocultar texto de botones en header, dejar solo iconos */
+  .cart-btn span:not(.cart-badge) { display: none; }
+  .cart-btn {
+    padding: 8px 10px;
+    min-width: 0;
+  }
+
+  /* Auth */
+  .auth-section { gap: 6px; }
+  .auth-section .btn-ghost { font-size: 0.78rem; padding: 6px 10px; }
+
+  /* Catalog */
+  .grid-discos {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .disco-card__body { padding: 10px 12px; }
+  .disco-card h3 { font-size: 0.85rem; }
+  .disco-card .artista { font-size: 0.75rem; }
+
+  /* Hero / catalog header */
+  .catalog-header { padding: 24px 16px 16px; }
+  .catalog-eyebrow { font-size: 0.65rem; }
+
+  /* Search bar */
+  .catalog-search { padding: 0 16px 16px; }
+  .search-input-wrap input { font-size: 0.875rem; }
+
+  /* Carrusel */
+  .carrusel-section { padding: 0 16px; }
+  .carrusel-card { width: 160px; }
+  .carrusel-card__img { height: 160px; }
+
+  /* Géneros */
+  .generos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .generos-filtros {
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .generos-filtros::-webkit-scrollbar { display: none; }
+
+  .genero-btn {
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+
+  /* Novedades */
+  .novedades-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .novedades-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 32px 16px 16px;
+  }
+
+  .novedades-titulo { font-size: 1.6rem; }
+
+  /* Paginación */
+  #generos-paginacion,
+  #novedades-paginacion,
+  #paginacion-container {
+    gap: 6px;
+    padding: 12px 0;
+  }
+
+  .pag-btn { padding: 6px 12px; font-size: 0.78rem; }
+  .pag-info { font-size: 0.72rem; }
+
+  /* Modal detalle */
+  .modal-detalle__content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    max-height: 92vh;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .modal-detalle__poster {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+  }
+
+  .modal-detalle__titulo { font-size: 1.3rem; }
+
+  /* Cart panel */
+  .cart-panel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    top: auto;
+    bottom: 0;
+    height: 85vh;
+    transform: translateY(100%);
+  }
+
+  .cart-panel.open { transform: translateY(0); }
+
+  /* Historial panel mismo estilo que cart */
+  #historial-panel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    top: auto;
+    bottom: 0;
+    height: 85vh;
+    transform: translateY(100%);
+  }
+
+  #historial-panel.open { transform: translateY(0); }
+
+  /* Secciones */
+  section { padding: 32px 16px; }
+
+  /* Main container */
+  .main-container { padding: 0 16px; }
+
+  /* Footer */
+  .site-footer { padding: 32px 16px; }
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ── Small mobile (≤ 380px) ───────────────────── */
+@media (max-width: 380px) {
+
+  .grid-discos { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .disco-card h3 { font-size: 0.78rem; }
+
+  .novedades-grid,
+  .generos-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .logo h1 { display: none; }
+
+  .modal-detalle__content { max-height: 96vh; }
 }
