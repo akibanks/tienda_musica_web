@@ -30,6 +30,11 @@ Interfaz web del proyecto VinylVibes, construida con HTML, CSS y JavaScript vani
 
 ---
 
+## Cuenta de Demostración (Demo Account)
+-User:admin_chocolate
+-Contraseña:chocolate
+
+---
 ## Páginas
 
 ### index.html — Catálogo principal
