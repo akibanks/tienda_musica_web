@@ -945,7 +945,7 @@ function actualizarInterfazUsuario() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
                 Mis Compras
             </button>
-            ${esAdmin ? `<button class="cart-btn btn-sm" onclick="window.location.href='admin.html'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</button>` : ''}
+            ${(esAdmin || localStorage.getItem('esDemo') === 'true') ? `<button class="cart-btn btn-sm" onclick="window.location.href='admin.html'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Admin</button>` : ''}
             <span style="font-size:0.8rem;color:var(--text-muted);padding:0 4px;">${usuario}</span>
             <button class="btn-ghost btn-sm" onclick="cerrarSesion()">Salir</button>`;
     } else {

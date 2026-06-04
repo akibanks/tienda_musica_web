@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Guardar token JWT + datos de sesión
                     localStorage.setItem('vv_token',        data.token);
                     localStorage.setItem('usuarioLogueado', data.nombre);
-                    localStorage.setItem('esAdmin',         data.es_admin ? 'true' : 'false');
+                    localStorage.setItem('esAdmin',         data.es_admin  ? 'true' : 'false');
+                    localStorage.setItem('esDemo',          data.es_demo   ? 'true' : 'false');
                     // Redirigir al index usando ruta absoluta compatible con GitHub Pages
                     const base = window.location.pathname.replace('/login.html', '');
                     window.location.href = base + '/index.html';

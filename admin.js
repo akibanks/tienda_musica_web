@@ -13,14 +13,27 @@ function authHeaders() {
 }
 
 // ── INIT ──────────────────────────────────────────
+let _esDemo = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token   = localStorage.getItem('vv_token');
     const esAdmin = localStorage.getItem('esAdmin') === 'true';
+    const esDemo  = localStorage.getItem('esDemo')  === 'true';
 
-    if (!token || !esAdmin) {
-        mostrarToast('Acceso denegado. Solo administradores.', 'error');
+    if (!token || (!esAdmin && !esDemo)) {
+        mostrarToast('Acceso denegado.', 'error');
         setTimeout(() => window.location.href = 'index.html', 1500);
         return;
+    }
+
+    _esDemo = esDemo && !esAdmin;
+
+    if (_esDemo) {
+        // Mostrar banner de solo lectura
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.3);padding:8px 32px;text-align:center;font-size:0.8rem;color:var(--amber);font-family:"DM Mono",monospace;letter-spacing:0.05em;';
+        banner.textContent = '👁 Modo solo lectura — esta cuenta no puede realizar cambios';
+        document.querySelector('.admin-header').after(banner);
     }
 
     await Promise.all([cargarUsuarios(), cargarVentas()]);
@@ -91,12 +104,19 @@ function renderizarUsuarios(lista) {
             <td><span class="badge badge--${u.rol}">${u.rol}</span></td>
             <td style="color:var(--text-muted);font-size:0.8rem;">${formatearFecha(u.created_at)}</td>
             <td>
+                ${_esDemo ? `
+                <select class="select-rol" disabled style="opacity:0.4;cursor:not-allowed;">
+                    <option>${u.rol}</option>
+                </select>
+                <button class="btn-table btn-table--danger" disabled style="opacity:0.4;cursor:not-allowed;">Eliminar</button>
+                ` : `
                 <select class="select-rol" onchange="cambiarRol(${u.id_usuario}, this.value)">
                     <option value="cliente"  ${u.rol === 'cliente'  ? 'selected' : ''}>cliente</option>
                     <option value="vendedor" ${u.rol === 'vendedor' ? 'selected' : ''}>vendedor</option>
                     <option value="admin"    ${u.rol === 'admin'    ? 'selected' : ''}>admin</option>
                 </select>
                 <button class="btn-table btn-table--danger" onclick="confirmarEliminarUsuario(${u.id_usuario}, '${u.nombre}')">Eliminar</button>
+                `}
             </td>
         </tr>`).join('');
 }
@@ -210,6 +230,11 @@ function renderizarVentas(lista) {
             <td style="color:var(--text-muted);font-size:0.8rem;">${formatearFecha(v.fecha)}</td>
             <td>
                 <button class="btn-table" onclick="verDetalleVenta(${v.id_venta})">Ver detalle</button>
+                ${_esDemo ? `
+                <select class="select-rol" disabled style="opacity:0.4;cursor:not-allowed;">
+                    <option>${v.estado}</option>
+                </select>
+                ` : `
                 <select class="select-rol" onchange="cambiarEstadoVenta(${v.id_venta}, this.value)">
                     <option value="pendiente"  ${v.estado === 'pendiente'  ? 'selected' : ''}>pendiente</option>
                     <option value="pagada"     ${v.estado === 'pagada'     ? 'selected' : ''}>pagada</option>
@@ -217,6 +242,7 @@ function renderizarVentas(lista) {
                     <option value="entregada"  ${v.estado === 'entregada'  ? 'selected' : ''}>entregada</option>
                     <option value="cancelada"  ${v.estado === 'cancelada'  ? 'selected' : ''}>cancelada</option>
                 </select>
+                `}
             </td>
         </tr>`).join('');
 }
